@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ことばの雨</title>
+<style>
+:root{
+  --paper:#f8f1e4;
+  --paper2:#efe1c8;
+  --ink:#272019;
+  --muted:#82715b;
+  --thin:#d7c4a2;
+  --accent:#8b4c2f;
+  --gold:#b58a48;
+  --soft:#fffaf0;
+}
+*{ box-sizing:border-box; }
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:manipulation;
+}
+.app{
+  width:100vw;
+  height:100vh;
+  display:flex;
+}
+.left{
+  width:30%;
+  min-width:300px;
+  height:100%;
+  padding:20px 16px;
+  position:relative;
+  z-index:20;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,.15)),
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,.8), transparent 35%),
+    linear-gradient(180deg, #fff8e8, #f0e2c7);
+  border-right:1px solid rgba(80,50,20,.22);
+  box-shadow:8px 0 24px rgba(60,40,20,.08);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+h1{
+  margin:0 0 6px;
+  font-size:30px;
+  letter-spacing:.12em;
+  font-weight:700;
+}
+.guide{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.7;
+}
+.hud{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.current{
+  padding:11px 13px;
+  border:1px solid rgba(139,76,47,.28);
+  border-radius:16px;
+  background:rgba(255,255,255,.68);
+  font-size:14px;
+  line-height:1.6;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 6px 18px rgba(70,40,20,.05);
+}
+.current strong{
+  color:var(--accent);
+  font-size:19px;
+  letter-spacing:.08em;
+}
+.progress{
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.dot{
+  flex:1;
+  height:7px;
+  border-radius:999px;
+  background:rgba(130,113,91,.18);
+  overflow:hidden;
+  position:relative;
+}
+.dot.done{
+  background:linear-gradient(90deg, rgba(139,76,47,.75), rgba(181,138,72,.65));
+}
+.dot.active{
+  background:rgba(181,138,72,.28);
+  box-shadow:0 0 0 2px rgba(139,76,47,.12);
+}
+.dot.active::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent);
+  animation:shine 1.8s linear infinite;
+}
+@keyframes shine{
+  from{ transform:translateX(-100%); }
+  to{ transform:translateX(100%); }
+}
+.slots{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:10px;
+}
+.slot{
+  position:relative;
+  min-height:76px;
+  padding:10px 46px 10px 16px;
+  border:1px solid var(--thin);
+  border-radius:17px;
+  background:rgba(255,250,240,.62);
+  box-shadow:inset 0 2px 8px rgba(70,40,20,.04);
+  display:flex;
+  align-items:center;
+  transition:.25s ease;
+  overflow:hidden;
+}
+.slot::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:10px;
+  bottom:10px;
+  width:3px;
+  border-radius:999px;
+  background:transparent;
+}
+.slot.active::before{
+  background:linear-gradient(180deg, rgba(139,76,47,.55), rgba(181,138,72,.9));
+  box-shadow:0 0 10px rgba(181,138,72,.45);
+}
+.slot.active{
+  border-color:rgba(139,76,47,.8);
+  background:rgba(255,255,250,.94);
+  box-shadow:0 0 0 3px rgba(139,76,47,.12), 0 8px 22px rgba(80,50,20,.07), inset 0 2px 8px rgba(70,40,20,.04);
+}
+.slot.filled{
+  background:rgba(255,252,245,.95);
+}
+.slot-label{
+  position:absolute;
+  right:12px;
+  top:10px;
+  color:var(--muted);
+  font-size:13px;
+}
+.slot-text{
+  font-size:24px;
+  line-height:1.4;
+  letter-spacing:.08em;
+  min-height:32px;
+}
+.slot-hint{
+  color:#b6a184;
+  font-size:16px;
+}
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  padding-top:4px;
+}
+.sound-hint{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.5;
+}
+.pond-hud{
+  position:absolute;
+  right:18px;
+  top:16px;
+  z-index:12;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 12px;
+  border:1px solid rgba(120,90,50,.18);
+  border-radius:999px;
+  background:rgba(255,250,240,.52);
+  backdrop-filter:blur(6px);
+  color:rgba(55,40,25,.72);
+  font-size:13px;
+  letter-spacing:.08em;
+  pointer-events:none;
+}
+.pond-hud strong{
+  color:var(--accent);
+  font-size:15px;
+}
+.pond-note{
+  position:absolute;
+  right:18px;
+  bottom:16px;
+  z-index:12;
+  padding:8px 11px;
+  border:1px solid rgba(120,90,50,.16);
+  border-radius:12px;
+  background:rgba(255,250,240,.42);
+  backdrop-filter:blur(6px);
+  color:rgba(70,55,40,.58);
+  font-size:12px;
+  pointer-events:none;
+}
+button{
+  border:1px solid var(--thin);
+  background:#fff8e8;
+  color:var(--ink);
+  border-radius:999px;
+  padding:9px 13px;
+  font-family:inherit;
+  font-size:14px;
+  cursor:pointer;
+}
+button:hover{
+  border-color:var(--accent);
+}
+button:active{
+  transform:translateY(1px);
+}
+.toast{
+  position:absolute;
+  left:16px;
+  bottom:74px;
+  max-width:calc(100% - 32px);
+  padding:9px 12px;
+  border-radius:12px;
+  background:rgba(50,35,20,.84);
+  color:#fff7e8;
+  font-size:13px;
+  opacity:0;
+  transform:translateY(8px);
+  transition:.25s ease;
+  pointer-events:none;
+}
+.toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
+.right{
+  flex:1;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 70% 20%, rgba(255,255,255,.72), transparent 25%),
+    radial-gradient(circle at 30% 70%, rgba(255,255,255,.35), transparent 28%),
+    linear-gradient(180deg, #f4ead7, #ead9bb);
+}
+.right::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(120,90,50,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,90,50,.025) 1px, transparent 1px);
+  background-size:44px 44px, 44px 44px;
+  opacity:.55;
+  pointer-events:none;
+}
+.right::after{
+  content:"";
+  position:absolute;
+  inset:-15%;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(170,120,60,.08), transparent 25%),
+    radial-gradient(circle at 75% 50%, rgba(110,80,45,.06), transparent 30%);
+  filter:blur(8px);
+  pointer-events:none;
+}
+.creature{
+  position:absolute;
+  left:0;
+  top:0;
+  width:0;
+  height:0;
+  pointer-events:none;
+  z-index:5;
+}
+.creature.flying-layer{
+  position:fixed;
+  z-index:100;
+}
+.char{
+  position:absolute;
+  left:0;
+  top:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:1em;
+  min-height:1em;
+  color:rgba(39,32,25,.72);
+  font-weight:600;
+  text-shadow:0 1px 1px rgba(255,255,255,.65);
+  cursor:pointer;
+  pointer-events:auto;
+  will-change:transform, opacity;
+  padding:10px;
+  margin:-10px;
+  border-radius:50%;
+}
+.creature.valid .char{
+  color:rgba(32,25,18,.94);
+  text-shadow:0 0 8px rgba(181,138,72,.16), 0 1px 1px rgba(255,255,255,.8);
+}
+.creature.invalid .char{
+  color:rgba(32,25,18,.94);
+  text-shadow:0 0 8px rgba(181,138,72,.12), 0 1px 1px rgba(255,255,255,.8);
+}
+.creature.fleeing .char{
+  color:rgba(90,58,40,.82);
+}
+.creature.caught .char{
+  color:rgba(139,76,47,.96);
+  text-shadow:0 0 12px rgba(181,138,72,.42), 0 1px 1px rgba(255,255,255,.8);
+}
+.clean{
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+  z-index:30;
+  background:rgba(248,241,228,.88);
+  backdrop-filter:blur(4px);
+}
+.clean.show{
+  display:flex;
+}
+.clean-card{
+  width:min(560px,90%);
+  min-height:420px;
+  padding:36px 30px 30px;
+  border:1px solid var(--thin);
+  border-radius:24px;
+  background:rgba(255,250,240,.94);
+  box-shadow:0 18px 40px rgba(60,40,20,.18);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:18px;
+}
+.clean-title{
+  font-size:18px;
+  color:var(--muted);
+  letter-spacing:.12em;
+}
+.clean-poem{
+  writing-mode:horizontal-tb;
+  text-orientation:mixed;
+  width:100%;
+  min-height:250px;
+  font-size:27px;
+  line-height:1.7;
+  letter-spacing:.12em;
+  display:flex;
+  flex-direction:row;
+  align-items:flex-start;
+  justify-content:center;
+  gap:1.15em;
+  padding-top:8px;
+  margin-bottom:auto;
+}
+.clean-poem .ku{
+  writing-mode:vertical-rl;
+  text-orientation:upright;
+  display:block;
+  white-space:nowrap;
+  align-self:flex-start;
+}
+.clean-actions{
+  display:flex;
+  gap:8px;
+}
+
+
+.ripple{
+  position:fixed;
+  width:14px;
+  height:14px;
+  border:1px solid rgba(90,70,45,.35);
+  border-radius:50%;
+  pointer-events:none;
+  z-index:90;
+  transform:translate(-50%,-50%) scale(.2);
+  opacity:.75;
+  animation:rippleOut .72s ease-out forwards;
+}
+.ripple::after{
+  content:"";
+  position:absolute;
+  inset:-7px;
+  border:1px solid rgba(90,70,45,.18);
+  border-radius:50%;
+}
+@keyframes rippleOut{
+  to{
+    transform:translate(-50%,-50%) scale(3.2);
+    opacity:0;
+  }
+}
+.char.long-vowel{
+  transform-origin:center center;
+}
+
+.wake{
+  position:fixed;
+  width:10px;
+  height:10px;
+  border:1px solid rgba(80,60,40,.20);
+  border-radius:50%;
+  pointer-events:none;
+  z-index:80;
+  transform:translate(-50%,-50%) scale(.2);
+  opacity:.45;
+  animation:wakeOut 1.15s ease-out forwards;
+}
+@keyframes wakeOut{
+  to{
+    transform:translate(-50%,-50%) scale(2.5);
+    opacity:0;
+  }
+}
+.creature.near .char{
+  text-shadow:0 0 10px rgba(181,138,72,.28), 0 1px 1px rgba(255,255,255,.9);
+}
+
+
+/* minimal mode: remove explanatory HUD/UI from the creation screen */
+.guide,
+.hud,
+.actions,
+.sound-hint,
+.pond-hud,
+.pond-note{
+  display:none !important;
+}
+.left{
+  gap:10px;
+}
+.slots{
+  justify-content:center;
+}
+
+@media (max-width:800px){
+  .app{ flex-direction:column; }
+  .left{
+    width:100%;
+    min-width:0;
+    height:42%;
+    padding:12px;
+    border-right:none;
+    border-bottom:1px solid rgba(80,50,20,.22);
+  }
+  h1{ font-size:22px; }
+  .guide{ display:none; }
+  .slots{ gap:6px; }
+  .slot{
+    min-height:42px;
+    padding:6px 38px 6px 10px;
+    border-radius:12px;
+  }
+  .slot-text{ font-size:18px; }
+  .right{ height:58%; width:100%; flex:none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="left" id="leftPanel">
+    <h1>ことばの雨</h1>
+    <div class="guide">右側を下から上へ泳ぎながら流れる言葉に触れて、五七五七七を作ります。今の音数と違う言葉は、震えて逃げます。</div>
+    <div class="hud">
+      <div class="current" id="currentGuide">次は <strong>五音</strong> の言葉をすくう</div>
+      <div class="progress" id="progress"></div>
+    </div>
+    <div class="slots" id="slots"></div>
+    <div class="actions">
+      <button id="undoBtn">一語戻す</button>
+      <button id="resetBtn">もう一首</button>
+      <button id="copyBtn">コピー</button>
+      <button id="soundBtn">音：入</button>
+    </div>
+    <div class="sound-hint">合う言葉は左へ泳ぎ、違う音数は震えて逃げます。言葉は下から上へ流れます。</div>
+    <div class="toast" id="toast"></div>
+  </section>
+  <section class="right" id="pond">
+    <div class="pond-hud" id="pondHud">いま <strong>五音</strong></div>
+    <div class="pond-note">濃い文字をすくう。下から上へ流れる。</div>
+  </section>
+</div>
+
+<div class="clean" id="clean">
+  <div class="clean-card">
+    <div class="clean-title">一首できました</div>
+    <div class="clean-poem" id="cleanPoem"></div>
+    <div class="clean-actions">
+      <button id="newFromCleanBtn">もう一首</button>
+      <button id="copyCleanBtn">コピー</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const pond = document.getElementById("pond");
+  const slotsEl = document.getElementById("slots");
+  const currentGuide = document.getElementById("currentGuide");
+  const progressEl = document.getElementById("progress");
+  const pondHud = document.getElementById("pondHud");
+  const toast = document.getElementById("toast");
+  const clean = document.getElementById("clean");
+  const cleanPoem = document.getElementById("cleanPoem");
+
+  const pattern = [5,7,5,7,7];
+  const patternLabel = ["五音","七音","五音","七音","七音"];
+  let poem = ["","","","",""];
+  let currentIndex = 0;
+  let creatures = [];
+  let lastTime = performance.now();
+  let spawnTimer = 0;
+  let toastTimer = 0;
+  let audioCtx = null;
+  let soundOn = true;
+  let pointer = {x:0, y:0, active:false, last:0};
+  let wakeTimer = 0;
+
+  const words = [
+    {text:"春の朝", kana:"はるのあさ", mora:5, roles:[0], tags:["春","朝","情景"], mood:"light"},
+    {text:"夏の雲", kana:"なつのくも", mora:5, roles:[0,2], tags:["夏","空","情景"], mood:"light"},
+    {text:"秋の風", kana:"あきのかぜ", mora:5, roles:[0,2], tags:["秋","風","情景"], mood:"calm"},
+    {text:"冬の月", kana:"ふゆのつき", mora:5, roles:[0,2], tags:["冬","夜","情景"], mood:"quiet"},
+    {text:"花の雨", kana:"はなのあめ", mora:5, roles:[0,2], tags:["春","雨"], mood:"soft"},
+    {text:"雪明かり", kana:"ゆきあかり", mora:5, roles:[0,2], tags:["冬","光"], mood:"quiet"},
+    {text:"帰り道", kana:"かえりみち", mora:5, roles:[0,2], tags:["学校","道"], mood:"calm"},
+    {text:"君の声", kana:"きみのこえ", mora:5, roles:[2], tags:["恋","人物"], mood:"wistful"},
+    {text:"胸の奥", kana:"むねのおく", mora:5, roles:[2], tags:["心情"], mood:"wistful"},
+    {text:"言えぬまま", kana:"いえぬまま", mora:5, roles:[2], tags:["恋","心情"], mood:"wistful"},
+    {text:"白い雲", kana:"しろいくも", mora:5, roles:[0,2], tags:["空"], mood:"light"},
+    {text:"水の音", kana:"みずのおと", mora:5, roles:[0,2], tags:["自然"], mood:"calm"},
+    {text:"坂の上", kana:"さかのうえ", mora:5, roles:[0,2], tags:["場所"], mood:"calm"},
+    {text:"星ひとつ", kana:"ほしひとつ", mora:5, roles:[0,2], tags:["夜"], mood:"quiet"},
+    {text:"窓ぎわの", kana:"まどぎわの", mora:5, roles:[0], tags:["学校","室内"], mood:"calm"},
+    {text:"名を呼んだ", kana:"なをよんだ", mora:5, roles:[2], tags:["人物","心情"], mood:"wistful"},
+    {text:"ふり返る", kana:"ふりかえる", mora:5, roles:[2], tags:["動作"], mood:"wistful"},
+    {text:"まだ少し", kana:"まだすこし", mora:5, roles:[2,4], tags:["余韻"], mood:"wistful"},
+    {text:"青嵐", kana:"あおあらし", mora:5, roles:[0], tags:["夏","風"], mood:"active"},
+    {text:"夕立ちに", kana:"ゆうだちに", mora:5, roles:[0], tags:["夏","雨"], mood:"active"},
+    {text:"夕焼けの空", kana:"ゆうやけのそら", mora:7, roles:[1], tags:["夕方","空"], mood:"soft"},
+    {text:"川面が光る", kana:"かわもがひかる", mora:7, roles:[1], tags:["水","光"], mood:"light"},
+    {text:"校舎の影に", kana:"こうしゃのかげに", mora:7, roles:[1], tags:["学校"], mood:"calm"},
+    {text:"雨音を聞く", kana:"あまおとをきく", mora:7, roles:[1], tags:["雨"], mood:"quiet"},
+    {text:"窓から見える", kana:"まどからみえる", mora:7, roles:[1], tags:["室内"], mood:"calm"},
+    {text:"風だけ残る", kana:"かぜだけのこる", mora:7, roles:[1,4], tags:["風","余韻"], mood:"soft"},
+    {text:"夜明けの空に", kana:"よあけのそらに", mora:7, roles:[1], tags:["朝","空"], mood:"light"},
+    {text:"静かな庭で", kana:"しずかなにわで", mora:7, roles:[1], tags:["場所"], mood:"quiet"},
+    {text:"忘れられずに", kana:"わすれられずに", mora:7, roles:[3], tags:["記憶","心情"], mood:"wistful"},
+    {text:"会いたいけれど", kana:"あいたいけれど", mora:7, roles:[3], tags:["恋","心情"], mood:"wistful"},
+    {text:"涙をかくし", kana:"なみだをかくし", mora:7, roles:[3], tags:["心情"], mood:"wistful"},
+    {text:"少し笑った", kana:"すこしわらった", mora:7, roles:[3], tags:["心情"], mood:"soft"},
+    {text:"さよならのあと", kana:"さよならのあと", mora:7, roles:[3,4], tags:["別れ"], mood:"wistful"},
+    {text:"季節を越えて", kana:"きせつをこえて", mora:7, roles:[4], tags:["余韻"], mood:"soft"},
+    {text:"心の底で", kana:"こころのそこで", mora:7, roles:[4], tags:["心情"], mood:"quiet"},
+    {text:"言葉にならず", kana:"ことばにならず", mora:7, roles:[4], tags:["余韻"], mood:"wistful"},
+    {text:"光になって", kana:"ひかりになって", mora:7, roles:[4], tags:["光","余韻"], mood:"light"},
+    {text:"今でも少し", kana:"いまでもすこし", mora:7, roles:[4], tags:["記憶","余韻"], mood:"wistful"},
+    {text:"明日を待って", kana:"あしたをまって", mora:7, roles:[4], tags:["未来"], mood:"light"},
+    {text:"春霞", kana:"はるがすみ", mora:5, roles:[0,2], tags:["春","情景","霞"], mood:"soft"},
+    {text:"朝ぼらけ", kana:"あさぼらけ", mora:5, roles:[0], tags:["朝","情景"], mood:"light"},
+    {text:"若草の", kana:"わかくさの", mora:5, roles:[0], tags:["春","自然"], mood:"light"},
+    {text:"朝露に", kana:"あさつゆに", mora:5, roles:[0], tags:["朝","自然"], mood:"soft"},
+    {text:"遠山に", kana:"とおやまに", mora:5, roles:[0], tags:["山","情景"], mood:"calm"},
+    {text:"海鳴りの", kana:"うみなりの", mora:5, roles:[0], tags:["海","音"], mood:"quiet"},
+    {text:"潮騒の", kana:"しおさいの", mora:5, roles:[0], tags:["海","音"], mood:"calm"},
+    {text:"星月夜", kana:"ほしづきよ", mora:5, roles:[0,2], tags:["夜","星"], mood:"quiet"},
+    {text:"月の舟", kana:"つきのふね", mora:5, roles:[0,2], tags:["夜","月"], mood:"soft"},
+    {text:"冬銀河", kana:"ふゆぎんが", mora:5, roles:[0], tags:["冬","星"], mood:"quiet"},
+    {text:"白き息", kana:"しろきいき", mora:5, roles:[0,2], tags:["冬","身体"], mood:"quiet"},
+    {text:"雪の音", kana:"ゆきのおと", mora:5, roles:[0,2], tags:["冬","音"], mood:"quiet"},
+    {text:"木枯らしに", kana:"こがらしに", mora:5, roles:[0], tags:["冬","風"], mood:"wistful"},
+    {text:"葉のしずく", kana:"はのしずく", mora:5, roles:[0,2], tags:["自然","雨"], mood:"soft"},
+    {text:"夕まぐれ", kana:"ゆうまぐれ", mora:5, roles:[0,2], tags:["夕方"], mood:"wistful"},
+    {text:"朝まだき", kana:"あさまだき", mora:5, roles:[0], tags:["朝"], mood:"quiet"},
+    {text:"雨あがり", kana:"あめあがり", mora:5, roles:[0,2], tags:["雨","光"], mood:"light"},
+    {text:"花筏", kana:"はないかだ", mora:5, roles:[0,2], tags:["春","花","水"], mood:"soft"},
+    {text:"薄氷", kana:"うすごおり", mora:5, roles:[0,2], tags:["冬","水"], mood:"quiet"},
+    {text:"蝉しぐれ", kana:"せみしぐれ", mora:5, roles:[0], tags:["夏","音"], mood:"active"},
+    {text:"影法師", kana:"かげぼうし", mora:5, roles:[0,2], tags:["影","余韻"], mood:"wistful"},
+    {text:"古き橋", kana:"ふるきはし", mora:5, roles:[0], tags:["場所","記憶"], mood:"calm"},
+    {text:"路地裏に", kana:"ろじうらに", mora:5, roles:[0], tags:["場所"], mood:"quiet"},
+    {text:"駅前で", kana:"えきまえで", mora:5, roles:[0], tags:["場所","街"], mood:"calm"},
+    {text:"踏切の", kana:"ふみきりの", mora:5, roles:[0], tags:["場所","街"], mood:"calm"},
+    {text:"教室に", kana:"きょうしつに", mora:5, roles:[0], tags:["学校"], mood:"calm"},
+    {text:"黒板に", kana:"こくばんに", mora:5, roles:[0], tags:["学校"], mood:"calm"},
+    {text:"チャイム鳴る", kana:"ちゃいむなる", mora:5, roles:[2], tags:["学校","音"], mood:"light"},
+    {text:"放課後の", kana:"ほうかごの", mora:5, roles:[0], tags:["学校","夕方"], mood:"wistful"},
+    {text:"机には", kana:"つくえには", mora:5, roles:[0,2], tags:["学校","室内"], mood:"calm"},
+    {text:"廊下から", kana:"ろうかから", mora:5, roles:[0,2], tags:["学校"], mood:"calm"},
+    {text:"屋上で", kana:"おくじょうで", mora:5, roles:[0], tags:["学校","空"], mood:"light"},
+    {text:"白いチョーク", kana:"しろいちょーく", mora:5, roles:[0,2], tags:["学校"], mood:"calm"},
+    {text:"掲示板", kana:"けいじばん", mora:5, roles:[0,2], tags:["学校"], mood:"calm"},
+    {text:"靴箱に", kana:"くつばこに", mora:5, roles:[0], tags:["学校","恋"], mood:"soft"},
+    {text:"君を待つ", kana:"きみをまつ", mora:5, roles:[2,4], tags:["恋","待つ"], mood:"wistful"},
+    {text:"手を振って", kana:"てをふって", mora:5, roles:[2,4], tags:["人物","別れ"], mood:"soft"},
+    {text:"目をそらす", kana:"めをそらす", mora:5, roles:[2], tags:["心情","恋"], mood:"wistful"},
+    {text:"口ごもる", kana:"くちごもる", mora:5, roles:[2], tags:["心情"], mood:"wistful"},
+    {text:"息をのむ", kana:"いきをのむ", mora:5, roles:[2], tags:["心情","身体"], mood:"active"},
+    {text:"嘘みたい", kana:"うそみたい", mora:5, roles:[2,4], tags:["心情"], mood:"soft"},
+    {text:"夢のあと", kana:"ゆめのあと", mora:5, roles:[2,4], tags:["夢","余韻"], mood:"wistful"},
+    {text:"忘れもの", kana:"わすれもの", mora:5, roles:[2,4], tags:["記憶"], mood:"wistful"},
+    {text:"ありがとう", kana:"ありがとう", mora:5, roles:[4], tags:["感謝","余韻"], mood:"light"},
+    {text:"さようなら", kana:"さようなら", mora:5, roles:[4], tags:["別れ","余韻"], mood:"wistful"},
+    {text:"なつかしい", kana:"なつかしい", mora:5, roles:[2,4], tags:["記憶"], mood:"wistful"},
+    {text:"怖くない", kana:"こわくない", mora:5, roles:[2,4], tags:["勇気"], mood:"light"},
+    {text:"ひとりごと", kana:"ひとりごと", mora:5, roles:[2,4], tags:["孤独","言葉"], mood:"quiet"},
+    {text:"秘密だけ", kana:"ひみつだけ", mora:5, roles:[2,4], tags:["秘密","恋"], mood:"wistful"},
+    {text:"指先に", kana:"ゆびさきに", mora:5, roles:[2], tags:["身体","心情"], mood:"soft"},
+    {text:"傘の下", kana:"かさのした", mora:5, roles:[0,2], tags:["雨","恋"], mood:"soft"},
+    {text:"母の声", kana:"ははのこえ", mora:5, roles:[2], tags:["家族"], mood:"soft"},
+    {text:"父の背を", kana:"ちちのせを", mora:5, roles:[2], tags:["家族"], mood:"calm"},
+    {text:"祖母の庭", kana:"そぼのにわ", mora:5, roles:[0,2], tags:["家族","庭"], mood:"soft"},
+    {text:"幼き日", kana:"おさなきひ", mora:5, roles:[2,4], tags:["記憶"], mood:"wistful"},
+    {text:"春風のなか", kana:"はるかぜのなか", mora:7, roles:[1], tags:["春","風"], mood:"light"},
+    {text:"花びらが舞う", kana:"はなびらがまう", mora:7, roles:[1], tags:["春","花"], mood:"soft"},
+    {text:"朝焼けの町", kana:"あさやけのまち", mora:7, roles:[1], tags:["朝","街"], mood:"light"},
+    {text:"水面に揺れる", kana:"みなもにゆれる", mora:7, roles:[1], tags:["水","揺れ"], mood:"soft"},
+    {text:"小鳥が渡る", kana:"ことりがわたる", mora:7, roles:[1], tags:["鳥","空"], mood:"light"},
+    {text:"木漏れ日浴びて", kana:"こもれびあびて", mora:7, roles:[1], tags:["光","自然"], mood:"light"},
+    {text:"坂道をゆく", kana:"さかみちをゆく", mora:7, roles:[1], tags:["道"], mood:"calm"},
+    {text:"海まで歩く", kana:"うみまであるく", mora:7, roles:[1], tags:["海","道"], mood:"light"},
+    {text:"雨傘ひらく", kana:"あまがさひらく", mora:7, roles:[1], tags:["雨"], mood:"soft"},
+    {text:"夕立のあと", kana:"ゆうだちのあと", mora:7, roles:[1,4], tags:["夏","雨","余韻"], mood:"soft"},
+    {text:"風鈴が鳴る", kana:"ふうりんがなる", mora:7, roles:[1], tags:["夏","音"], mood:"light"},
+    {text:"虫の音を聞く", kana:"むしのねをきく", mora:7, roles:[1], tags:["秋","音"], mood:"quiet"},
+    {text:"銀杏が落ちる", kana:"いちょうがおちる", mora:7, roles:[1], tags:["秋"], mood:"calm"},
+    {text:"夜風にほどけ", kana:"よかぜにほどけ", mora:7, roles:[1,4], tags:["夜","風"], mood:"soft"},
+    {text:"星座をなぞる", kana:"せいざをなぞる", mora:7, roles:[1], tags:["夜","星"], mood:"quiet"},
+    {text:"雪だけ白い", kana:"ゆきだけしろい", mora:7, roles:[1,4], tags:["雪","冬"], mood:"quiet"},
+    {text:"灯りがにじむ", kana:"あかりがにじむ", mora:7, roles:[1,4], tags:["街","夜"], mood:"wistful"},
+    {text:"橋を渡って", kana:"はしをわたって", mora:7, roles:[1], tags:["道","場所"], mood:"calm"},
+    {text:"駅まで走る", kana:"えきまではしる", mora:7, roles:[1], tags:["街","動作"], mood:"active"},
+    {text:"教室のすみ", kana:"きょうしつのすみ", mora:7, roles:[1], tags:["学校"], mood:"quiet"},
+    {text:"黒板の文字", kana:"こくばんのもじ", mora:7, roles:[1], tags:["学校","言葉"], mood:"calm"},
+    {text:"ノートを閉じる", kana:"のーとをとじる", mora:7, roles:[1,4], tags:["学校","終わり"], mood:"calm"},
+    {text:"放課後の窓", kana:"ほうかごのまど", mora:7, roles:[1], tags:["学校","夕方"], mood:"wistful"},
+    {text:"廊下にひびく", kana:"ろうかにひびく", mora:7, roles:[1], tags:["学校","音"], mood:"calm"},
+    {text:"プリントを抱く", kana:"ぷりんとをだく", mora:7, roles:[1], tags:["学校"], mood:"calm"},
+    {text:"下駄箱の前", kana:"げたばこのまえ", mora:7, roles:[1], tags:["学校","場所"], mood:"soft"},
+    {text:"チャイムのあとに", kana:"ちゃいむのあとに", mora:7, roles:[1], tags:["学校","音"], mood:"soft"},
+    {text:"制服の袖", kana:"せいふくのそで", mora:7, roles:[1,3], tags:["学校","身体"], mood:"soft"},
+    {text:"あなたを探す", kana:"あなたをさがす", mora:7, roles:[3], tags:["恋","人物"], mood:"wistful"},
+    {text:"君だけ見てた", kana:"きみだけみてた", mora:7, roles:[3], tags:["恋"], mood:"wistful"},
+    {text:"言葉をなくす", kana:"ことばをなくす", mora:7, roles:[3], tags:["言葉","心情"], mood:"wistful"},
+    {text:"笑顔をしまう", kana:"えがおをしまう", mora:7, roles:[3], tags:["心情"], mood:"wistful"},
+    {text:"涙が落ちる", kana:"なみだがおちる", mora:7, roles:[3], tags:["心情"], mood:"wistful"},
+    {text:"約束の場所", kana:"やくそくのばしょ", mora:7, roles:[3], tags:["約束","恋"], mood:"wistful"},
+    {text:"手紙を書いた", kana:"てがみをかいた", mora:7, roles:[3], tags:["言葉","恋"], mood:"soft"},
+    {text:"名前を呼べず", kana:"なまえをよべず", mora:7, roles:[3], tags:["恋","言葉"], mood:"wistful"},
+    {text:"背中を見てた", kana:"せなかをみてた", mora:7, roles:[3], tags:["別れ","人物"], mood:"wistful"},
+    {text:"季節が変わる", kana:"きせつがかわる", mora:7, roles:[4], tags:["季節","余韻"], mood:"soft"},
+    {text:"昨日に似てる", kana:"きのうににてる", mora:7, roles:[4], tags:["記憶"], mood:"wistful"},
+    {text:"未来を描く", kana:"みらいをえがく", mora:7, roles:[4], tags:["未来"], mood:"light"},
+    {text:"まだ言えなくて", kana:"まだいえなくて", mora:7, roles:[3,4], tags:["恋","心情"], mood:"wistful"},
+    {text:"誰にも言わず", kana:"だれにもいわず", mora:7, roles:[3,4], tags:["秘密","心情"], mood:"wistful"},
+    {text:"心がゆれる", kana:"こころがゆれる", mora:7, roles:[3,4], tags:["心情"], mood:"wistful"},
+    {text:"小さな願い", kana:"ちいさなねがい", mora:7, roles:[4], tags:["願い"], mood:"soft"},
+    {text:"明日へつづく", kana:"あしたへつづく", mora:7, roles:[4], tags:["未来"], mood:"light"},
+    {text:"夢なら覚めて", kana:"ゆめならさめて", mora:7, roles:[4], tags:["夢","余韻"], mood:"wistful"},
+    {text:"答えを探す", kana:"こたえをさがす", mora:7, roles:[4], tags:["未来","心情"], mood:"calm"},
+    {text:"夜が明けていく", kana:"よがあけていく", mora:7, roles:[4], tags:["朝","未来"], mood:"light"},
+    {text:"光を抱いて", kana:"ひかりをだいて", mora:7, roles:[4], tags:["光","希望"], mood:"light"},
+    {text:"影だけ揺れる", kana:"かげだけゆれる", mora:7, roles:[4], tags:["影","余韻"], mood:"wistful"},
+    {text:"胸だけ熱い", kana:"むねだけあつい", mora:7, roles:[3,4], tags:["心情"], mood:"active"},
+    {text:"ひとりで眠る", kana:"ひとりでねむる", mora:7, roles:[4], tags:["孤独","夜"], mood:"quiet"},
+    {text:"遠くで笑う", kana:"とおくでわらう", mora:7, roles:[3,4], tags:["記憶","人物"], mood:"wistful"},
+    {text:"声だけ残る", kana:"こえだけのこる", mora:7, roles:[4], tags:["声","余韻"], mood:"wistful"},
+    {text:"願いをほどく", kana:"ねがいをほどく", mora:7, roles:[4], tags:["願い","余韻"], mood:"soft"},
+    {text:"眠れない夜", kana:"ねむれないよる", mora:7, roles:[3,4], tags:["夜","心情"], mood:"quiet"},
+    {text:"それでも進む", kana:"それでもすすむ", mora:7, roles:[4], tags:["未来","決意"], mood:"light"},
+    {text:"世界が変わる", kana:"せかいがかわる", mora:7, roles:[4], tags:["未来"], mood:"light"},
+    {text:"レシートを", kana:"れしーとを", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"コンビニの", kana:"こんびにの", mora:5, roles:[0], tags:["街","生活"], mood:"calm"},
+    {text:"改札で", kana:"かいさつで", mora:5, roles:[0], tags:["駅","街"], mood:"calm"},
+    {text:"イヤホンの", kana:"いやほんの", mora:5, roles:[0,2], tags:["現代","音"], mood:"quiet"},
+    {text:"画面だけ", kana:"がめんだけ", mora:5, roles:[2,4], tags:["現代","孤独"], mood:"quiet"},
+    {text:"通知音", kana:"つうちおん", mora:5, roles:[0,2], tags:["現代","音"], mood:"active"},
+    {text:"青信号", kana:"あおしんごう", mora:5, roles:[0,2], tags:["街","移動"], mood:"calm"},
+    {text:"消しゴムの", kana:"けしごむの", mora:5, roles:[0,2], tags:["学校","物"], mood:"calm"},
+    {text:"白い皿", kana:"しろいさら", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"缶コーヒー", kana:"かんこーひー", mora:5, roles:[0,2], tags:["生活","街"], mood:"calm"},
+    {text:"鍵穴に", kana:"かぎあなに", mora:5, roles:[0,2], tags:["家","物"], mood:"quiet"},
+    {text:"濡れた靴", kana:"ぬれたくつ", mora:5, roles:[0,2], tags:["雨","身体"], mood:"wistful"},
+    {text:"体温計", kana:"たいおんけい", mora:5, roles:[0,2], tags:["身体","生活"], mood:"quiet"},
+    {text:"古い椅子", kana:"ふるいいす", mora:5, roles:[0,2], tags:["物","記憶"], mood:"calm"},
+    {text:"空き瓶に", kana:"あきびんに", mora:5, roles:[0,2], tags:["物","余韻"], mood:"quiet"},
+    {text:"破れ傘", kana:"やぶれがさ", mora:5, roles:[0,2], tags:["雨","物"], mood:"wistful"},
+    {text:"夜のバス", kana:"よるのばす", mora:5, roles:[0], tags:["夜","街"], mood:"quiet"},
+    {text:"赤ペンで", kana:"あかぺんで", mora:5, roles:[0,2], tags:["学校","書く"], mood:"calm"},
+    {text:"空欄を", kana:"くうらんを", mora:5, roles:[2], tags:["学校","空白"], mood:"quiet"},
+    {text:"非常口", kana:"ひじょうぐち", mora:5, roles:[0,2], tags:["場所","不安"], mood:"quiet"},
+    {text:"爪を切る", kana:"つめをきる", mora:5, roles:[2,4], tags:["身体","生活"], mood:"quiet"},
+    {text:"唇が", kana:"くちびるが", mora:5, roles:[2], tags:["身体","心情"], mood:"wistful"},
+    {text:"胃のあたり", kana:"いのあたり", mora:5, roles:[2], tags:["身体","不安"], mood:"quiet"},
+    {text:"まばたきの", kana:"まばたきの", mora:5, roles:[0,2], tags:["身体"], mood:"soft"},
+    {text:"左手を", kana:"ひだりてを", mora:5, roles:[2], tags:["身体"], mood:"calm"},
+    {text:"熱っぽい", kana:"ねつっぽい", mora:5, roles:[2,4], tags:["身体"], mood:"active"},
+    {text:"眠れずに", kana:"ねむれずに", mora:5, roles:[2,4], tags:["夜","身体"], mood:"quiet"},
+    {text:"目の奥が", kana:"めのおくが", mora:5, roles:[2], tags:["身体","心情"], mood:"wistful"},
+    {text:"声変わり", kana:"こえがわり", mora:5, roles:[2], tags:["身体","成長"], mood:"calm"},
+    {text:"平気です", kana:"へいきです", mora:5, roles:[2,4], tags:["強がり"], mood:"wistful"},
+    {text:"どうでもいい", kana:"どうでもいい", mora:5, roles:[2,4], tags:["投げやり"], mood:"quiet"},
+    {text:"うまくない", kana:"うまくない", mora:5, roles:[2,4], tags:["不器用"], mood:"wistful"},
+    {text:"嘘じゃない", kana:"うそじゃない", mora:5, roles:[2,4], tags:["心情"], mood:"wistful"},
+    {text:"返せない", kana:"かえせない", mora:5, roles:[2,4], tags:["返信","心情"], mood:"wistful"},
+    {text:"既読だけ", kana:"きどくだけ", mora:5, roles:[2,4], tags:["現代","恋"], mood:"wistful"},
+    {text:"黙る癖", kana:"だまるくせ", mora:5, roles:[2,4], tags:["性格","心情"], mood:"quiet"},
+    {text:"笑うふり", kana:"わらうふり", mora:5, roles:[2,4], tags:["心情","演技"], mood:"wistful"},
+    {text:"平日の", kana:"へいじつの", mora:5, roles:[0], tags:["生活"], mood:"calm"},
+    {text:"だれのせい", kana:"だれのせい", mora:5, roles:[2,4], tags:["葛藤"], mood:"active"},
+    {text:"半分は", kana:"はんぶんは", mora:5, roles:[2,4], tags:["曖昧"], mood:"calm"},
+    {text:"魚眼レンズ", kana:"ぎょがんれんず", mora:5, roles:[0,2], tags:["視覚","違和感"], mood:"active"},
+    {text:"錆びたネジ", kana:"さびたねじ", mora:5, roles:[0,2], tags:["物","時間"], mood:"quiet"},
+    {text:"割れた空", kana:"われたそら", mora:5, roles:[0,2], tags:["比喩","空"], mood:"active"},
+    {text:"名前だけ", kana:"なまえだけ", mora:5, roles:[2,4], tags:["言葉","余韻"], mood:"wistful"},
+    {text:"余白だけ", kana:"よはくだけ", mora:5, roles:[2,4], tags:["空白","余韻"], mood:"quiet"},
+    {text:"紙コップ", kana:"かみこっぷ", mora:5, roles:[0,2], tags:["物","生活"], mood:"calm"},
+    {text:"水たまり", kana:"みずたまり", mora:5, roles:[0,2], tags:["雨","場所"], mood:"soft"},
+    {text:"砂時計", kana:"すなどけい", mora:5, roles:[0,2], tags:["時間","物"], mood:"quiet"},
+    {text:"白昼夢", kana:"はくちゅうむ", mora:5, roles:[2], tags:["夢","違和感"], mood:"soft"},
+    {text:"ぬるい水", kana:"ぬるいみず", mora:5, roles:[0,2], tags:["感覚"], mood:"quiet"},
+    {text:"裏返す", kana:"うらがえす", mora:5, roles:[2], tags:["動作","転換"], mood:"active"},
+    {text:"線を引く", kana:"せんをひく", mora:5, roles:[2,4], tags:["境界","書く"], mood:"calm"},
+    {text:"折り目から", kana:"おりめから", mora:5, roles:[0,2], tags:["物","記憶"], mood:"quiet"},
+    {text:"換気扇", kana:"かんきせん", mora:5, roles:[0,2], tags:["生活","音"], mood:"quiet"},
+    {text:"午前二時", kana:"ごぜんにじ", mora:5, roles:[0,2], tags:["夜","時間"], mood:"quiet"},
+    {text:"コンビニの光", kana:"こんびにのひかり", mora:7, roles:[1], tags:["街","光","生活"], mood:"quiet"},
+    {text:"レシートを折る", kana:"れしーとをおる", mora:7, roles:[1,4], tags:["生活","物"], mood:"quiet"},
+    {text:"改札を抜ける", kana:"かいさつをぬける", mora:7, roles:[1], tags:["駅","移動"], mood:"calm"},
+    {text:"通知だけ鳴る", kana:"つうちだけなる", mora:7, roles:[1,3], tags:["現代","音"], mood:"wistful"},
+    {text:"画面を伏せる", kana:"がめんをふせる", mora:7, roles:[3], tags:["現代","心情"], mood:"quiet"},
+    {text:"既読が残る", kana:"きどくがのこる", mora:7, roles:[3,4], tags:["現代","恋"], mood:"wistful"},
+    {text:"イヤホンを外す", kana:"いやほんをはずす", mora:7, roles:[1,3], tags:["現代","音"], mood:"calm"},
+    {text:"終電を待つ", kana:"しゅうでんをまつ", mora:7, roles:[1,4], tags:["駅","夜"], mood:"quiet"},
+    {text:"青信号でも", kana:"あおしんごうでも", mora:7, roles:[3,4], tags:["街","躊躇"], mood:"wistful"},
+    {text:"自販機の赤", kana:"じはんきのあか", mora:7, roles:[1], tags:["街","色"], mood:"quiet"},
+    {text:"横断歩道", kana:"おうだんほどう", mora:7, roles:[1], tags:["街","場所"], mood:"calm"},
+    {text:"ビニール傘越し", kana:"びにーるがさごし", mora:7, roles:[1], tags:["雨","街"], mood:"soft"},
+    {text:"アスファルト濡れ", kana:"あすふぁるとぬれ", mora:7, roles:[1], tags:["雨","街"], mood:"quiet"},
+    {text:"冷蔵庫の音", kana:"れいぞうこのおと", mora:7, roles:[1,4], tags:["生活","音"], mood:"quiet"},
+    {text:"鍵だけ重い", kana:"かぎだけおもい", mora:7, roles:[4], tags:["物","心情"], mood:"wistful"},
+    {text:"洗濯物揺れ", kana:"せんたくものゆれ", mora:7, roles:[1], tags:["生活","風"], mood:"calm"},
+    {text:"白湯を飲み干す", kana:"さゆをのみほす", mora:7, roles:[4], tags:["身体","生活"], mood:"quiet"},
+    {text:"体温だけある", kana:"たいおんだけある", mora:7, roles:[3,4], tags:["身体","孤独"], mood:"quiet"},
+    {text:"窓ガラス曇る", kana:"まどがらすくもる", mora:7, roles:[1], tags:["室内","冬"], mood:"quiet"},
+    {text:"靴紐ほどけ", kana:"くつひもほどけ", mora:7, roles:[1,3], tags:["身体","移動"], mood:"calm"},
+    {text:"消し跡が残る", kana:"けしあとがのこる", mora:7, roles:[1,4], tags:["学校","余韻"], mood:"quiet"},
+    {text:"黒板の端に", kana:"こくばんのはしに", mora:7, roles:[1], tags:["学校","場所"], mood:"calm"},
+    {text:"赤ペンが乾く", kana:"あかぺんがかわく", mora:7, roles:[1,4], tags:["学校","物"], mood:"quiet"},
+    {text:"プリントの角", kana:"ぷりんとのかど", mora:7, roles:[1], tags:["学校","物"], mood:"calm"},
+    {text:"提出箱まで", kana:"ていしゅつばこまで", mora:7, roles:[1], tags:["学校","移動"], mood:"calm"},
+    {text:"名前を書けず", kana:"なまえをかけず", mora:7, roles:[3], tags:["学校","言葉"], mood:"wistful"},
+    {text:"空欄が光る", kana:"くうらんがひかる", mora:7, roles:[1,3], tags:["学校","空白"], mood:"quiet"},
+    {text:"答案の裏", kana:"とうあんのうら", mora:7, roles:[1,3], tags:["学校","裏"], mood:"quiet"},
+    {text:"窓際の席", kana:"まどぎわのせき", mora:7, roles:[1], tags:["学校","場所"], mood:"calm"},
+    {text:"机の木目", kana:"つくえのもくめ", mora:7, roles:[1], tags:["学校","物"], mood:"quiet"},
+    {text:"掃除用具入れ", kana:"そうじようぐいれ", mora:7, roles:[1], tags:["学校","場所"], mood:"calm"},
+    {text:"蛍光灯鳴る", kana:"けいこうとうなる", mora:7, roles:[1], tags:["学校","音"], mood:"quiet"},
+    {text:"上履きの砂", kana:"うわばきのすな", mora:7, roles:[1], tags:["学校","身体"], mood:"calm"},
+    {text:"欠席の丸", kana:"けっせきのまる", mora:7, roles:[1,3], tags:["学校","不在"], mood:"quiet"},
+    {text:"日直の文字", kana:"にっちょくのもじ", mora:7, roles:[1], tags:["学校","言葉"], mood:"calm"},
+    {text:"返事だけ軽い", kana:"へんじだけかるい", mora:7, roles:[3,4], tags:["会話","心情"], mood:"wistful"},
+    {text:"言い訳を飲む", kana:"いいわけをのむ", mora:7, roles:[3], tags:["言葉","身体"], mood:"wistful"},
+    {text:"唇を噛む", kana:"くちびるをかむ", mora:7, roles:[3], tags:["身体","心情"], mood:"wistful"},
+    {text:"目線だけ逃げる", kana:"めせんだけにげる", mora:7, roles:[3], tags:["身体","心情"], mood:"wistful"},
+    {text:"眠気に沈む", kana:"ねむけにしずむ", mora:7, roles:[3,4], tags:["身体","夜"], mood:"quiet"},
+    {text:"胃の奥が鳴る", kana:"いのおくがなる", mora:7, roles:[3], tags:["身体","不安"], mood:"quiet"},
+    {text:"右手だけ冷え", kana:"みぎてだけひえ", mora:7, roles:[3,4], tags:["身体","感覚"], mood:"quiet"},
+    {text:"声にはならず", kana:"こえにはならず", mora:7, roles:[3,4], tags:["声","心情"], mood:"wistful"},
+    {text:"言えた気がした", kana:"いえたきがした", mora:7, roles:[3,4], tags:["言葉","錯覚"], mood:"wistful"},
+    {text:"泣くほどでない", kana:"なくほどでない", mora:7, roles:[3,4], tags:["心情","曖昧"], mood:"quiet"},
+    {text:"怒るほどでも", kana:"おこるほどでも", mora:7, roles:[3,4], tags:["心情","曖昧"], mood:"quiet"},
+    {text:"平気なふりで", kana:"へいきなふりで", mora:7, roles:[3], tags:["強がり"], mood:"wistful"},
+    {text:"半分は嘘", kana:"はんぶんはうそ", mora:7, roles:[3,4], tags:["嘘","曖昧"], mood:"wistful"},
+    {text:"半分は本当", kana:"はんぶんはほんと", mora:7, roles:[3,4], tags:["本音","曖昧"], mood:"wistful"},
+    {text:"笑えば終わる", kana:"わらえばおわる", mora:7, roles:[3,4], tags:["演技","終わり"], mood:"wistful"},
+    {text:"何でもないと", kana:"なんでもないと", mora:7, roles:[3,4], tags:["強がり"], mood:"wistful"},
+    {text:"言ったら負けで", kana:"いったらまけで", mora:7, roles:[3,4], tags:["葛藤"], mood:"active"},
+    {text:"黙れば済んだ", kana:"だまればすんだ", mora:7, roles:[3,4], tags:["後悔"], mood:"wistful"},
+    {text:"まだ間に合うか", kana:"まだまにあうか", mora:7, roles:[4], tags:["未来","焦り"], mood:"active"},
+    {text:"空白が泳ぐ", kana:"くうはくがおよぐ", mora:7, roles:[1,4], tags:["空白","比喩"], mood:"soft"},
+    {text:"影だけ増える", kana:"かげだけふえる", mora:7, roles:[4], tags:["影","不安"], mood:"quiet"},
+    {text:"時間がほどける", kana:"じかんがほどける", mora:7, roles:[4], tags:["時間","比喩"], mood:"soft"},
+    {text:"名前がにじむ", kana:"なまえがにじむ", mora:7, roles:[3,4], tags:["名前","記憶"], mood:"wistful"},
+    {text:"記憶の裏側", kana:"きおくのうらがわ", mora:7, roles:[4], tags:["記憶","裏"], mood:"quiet"},
+    {text:"空の縫い目に", kana:"そらのぬいめに", mora:7, roles:[1], tags:["空","比喩"], mood:"soft"},
+    {text:"昨日の匂い", kana:"きのうのにおい", mora:7, roles:[1,4], tags:["記憶","感覚"], mood:"wistful"},
+    {text:"未来の手前", kana:"みらいのてまえ", mora:7, roles:[4], tags:["未来","境界"], mood:"light"},
+    {text:"まちがいの色", kana:"まちがいのいろ", mora:7, roles:[3,4], tags:["失敗","色"], mood:"wistful"},
+    {text:"沈黙の角", kana:"ちんもくのかど", mora:7, roles:[3,4], tags:["沈黙","比喩"], mood:"quiet"},
+    {text:"光の残り", kana:"ひかりののこり", mora:7, roles:[4], tags:["光","余韻"], mood:"soft"},
+    {text:"夢の継ぎ目で", kana:"ゆめのつぎめで", mora:7, roles:[1,4], tags:["夢","境界"], mood:"soft"},
+    {text:"水槽のなか", kana:"すいそうのなか", mora:7, roles:[1], tags:["水","比喩"], mood:"quiet"},
+    {text:"透明な檻", kana:"とうめいなおり", mora:7, roles:[1,4], tags:["比喩","孤独"], mood:"quiet"},
+    {text:"世界の端で", kana:"せかいのはしで", mora:7, roles:[1,4], tags:["世界","場所"], mood:"quiet"},
+    {text:"さみしさの芯", kana:"さみしさのしん", mora:7, roles:[3,4], tags:["孤独","心情"], mood:"wistful"},
+    {text:"やさしさの棘", kana:"やさしさのとげ", mora:7, roles:[3,4], tags:["葛藤","比喩"], mood:"wistful"},
+    {text:"言葉の骨を", kana:"ことばのほねを", mora:7, roles:[3], tags:["言葉","比喩"], mood:"quiet"},
+    {text:"沈む句読点", kana:"しずむくとうてん", mora:7, roles:[4], tags:["言葉","比喩"], mood:"quiet"},
+    {text:"余白を閉じる", kana:"よはくをとじる", mora:7, roles:[4], tags:["空白","終わり"], mood:"quiet"},
+    {text:"夜の水", kana:"よるのみず", mora:5, roles:[0,2,4], tags:["生活","夜","水"], mood:"quiet"},
+    {text:"爪の月", kana:"つめのつき", mora:5, roles:[0,2,4], tags:["身体","比喩"], mood:"quiet"},
+    {text:"冷めた粥", kana:"さめたかゆ", mora:5, roles:[0,2], tags:["生活","食"], mood:"quiet"},
+    {text:"曲がる鍵", kana:"まがるかぎ", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"皿の欠け", kana:"さらのかけ", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"米を研ぐ", kana:"こめをとぐ", mora:5, roles:[0,2], tags:["生活","動作"], mood:"calm"},
+    {text:"靴の砂", kana:"くつのすな", mora:5, roles:[0,2], tags:["生活","身体"], mood:"calm"},
+    {text:"財布だけ", kana:"さいふだけ", mora:5, roles:[0,2,4], tags:["生活","物"], mood:"quiet"},
+    {text:"鍵の冷え", kana:"かぎのひえ", mora:5, roles:[0,2], tags:["生活","感覚"], mood:"quiet"},
+    {text:"ぬるい茶を", kana:"ぬるいちゃを", mora:5, roles:[0,2], tags:["生活","食"], mood:"quiet"},
+    {text:"残る湯気", kana:"のこるゆげ", mora:5, roles:[0,2,4], tags:["生活","余韻"], mood:"soft"},
+    {text:"畳の目", kana:"たたみのめ", mora:5, roles:[0,2], tags:["生活","家"], mood:"calm"},
+    {text:"空の瓶", kana:"からのびん", mora:5, roles:[0,2,4], tags:["生活","物"], mood:"quiet"},
+    {text:"灯油缶", kana:"とうゆかん", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"錆びた鍋", kana:"さびたなべ", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"朝の塩", kana:"あさのしお", mora:5, roles:[0,2], tags:["生活","食"], mood:"calm"},
+    {text:"白湯のあと", kana:"さゆのあと", mora:5, roles:[2,4], tags:["生活","余韻"], mood:"quiet"},
+    {text:"黒い椅子", kana:"くろいいす", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"喉の闇", kana:"のどのやみ", mora:5, roles:[2,4], tags:["身体","比喩"], mood:"quiet"},
+    {text:"熱のあと", kana:"ねつのあと", mora:5, roles:[2,4], tags:["身体","記憶"], mood:"wistful"},
+    {text:"膝の裏", kana:"ひざのうら", mora:5, roles:[2], tags:["身体"], mood:"quiet"},
+    {text:"耳鳴りに", kana:"みみなりに", mora:5, roles:[0,2], tags:["身体","音"], mood:"quiet"},
+    {text:"背骨だけ", kana:"せぼねだけ", mora:5, roles:[2,4], tags:["身体","孤独"], mood:"quiet"},
+    {text:"歯の裏で", kana:"はのうらで", mora:5, roles:[2], tags:["身体"], mood:"quiet"},
+    {text:"爪を噛む", kana:"つめをかむ", mora:5, roles:[2], tags:["身体","心情"], mood:"wistful"},
+    {text:"肩のこり", kana:"かたのこり", mora:5, roles:[2], tags:["身体","生活"], mood:"quiet"},
+    {text:"舌の先", kana:"したのさき", mora:5, roles:[2], tags:["身体"], mood:"quiet"},
+    {text:"髪の水", kana:"かみのみず", mora:5, roles:[0,2], tags:["身体","水"], mood:"soft"},
+    {text:"脈だけが", kana:"みゃくだけが", mora:5, roles:[2], tags:["身体"], mood:"quiet"},
+    {text:"泣くほどの", kana:"なくほどの", mora:5, roles:[2,4], tags:["心情"], mood:"wistful"},
+    {text:"手首だけ", kana:"てくびだけ", mora:5, roles:[2,4], tags:["身体"], mood:"quiet"},
+    {text:"まぶた裏", kana:"まぶたうら", mora:5, roles:[2,4], tags:["身体","夢"], mood:"quiet"},
+    {text:"爪の白", kana:"つめのしろ", mora:5, roles:[2], tags:["身体","色"], mood:"quiet"},
+    {text:"舌の熱", kana:"したのねつ", mora:5, roles:[2], tags:["身体"], mood:"quiet"},
+    {text:"肺の底", kana:"はいのそこ", mora:5, roles:[2,4], tags:["身体"], mood:"quiet"},
+    {text:"終電の", kana:"しゅうでんの", mora:5, roles:[0], tags:["都市","時間"], mood:"quiet"},
+    {text:"駅の裏", kana:"えきのうら", mora:5, roles:[0], tags:["都市","場所"], mood:"quiet"},
+    {text:"ビルの風", kana:"びるのかぜ", mora:5, roles:[0,2], tags:["都市","風"], mood:"calm"},
+    {text:"信号が", kana:"しんごうが", mora:5, roles:[0,2], tags:["都市"], mood:"calm"},
+    {text:"誰の傘", kana:"だれのかさ", mora:5, roles:[0,2], tags:["都市","雨"], mood:"wistful"},
+    {text:"路地の猫", kana:"ろじのねこ", mora:5, roles:[0,2], tags:["都市","動物"], mood:"soft"},
+    {text:"ガラス越し", kana:"がらすごし", mora:5, roles:[0,2], tags:["都市","距離"], mood:"quiet"},
+    {text:"赤い塔", kana:"あかいとう", mora:5, roles:[0,2], tags:["都市","色"], mood:"calm"},
+    {text:"車窓だけ", kana:"しゃそうだけ", mora:5, roles:[0,2,4], tags:["都市","移動"], mood:"quiet"},
+    {text:"濡れた駅", kana:"ぬれたえき", mora:5, roles:[0,2], tags:["都市","雨"], mood:"quiet"},
+    {text:"電線に", kana:"でんせんに", mora:5, roles:[0], tags:["都市","空"], mood:"calm"},
+    {text:"青のまま", kana:"あおのまま", mora:5, roles:[2,4], tags:["都市","色"], mood:"quiet"},
+    {text:"街の底", kana:"まちのそこ", mora:5, roles:[0,2], tags:["都市","比喩"], mood:"quiet"},
+    {text:"夜景から", kana:"やけいから", mora:5, roles:[0], tags:["都市","夜"], mood:"calm"},
+    {text:"黒い窓", kana:"くろいまど", mora:5, roles:[0,2], tags:["都市","室内"], mood:"quiet"},
+    {text:"群れの中", kana:"むれのなか", mora:5, roles:[0,2], tags:["都市","人"], mood:"quiet"},
+    {text:"遠いビル", kana:"とおいびる", mora:5, roles:[0,2], tags:["都市","距離"], mood:"quiet"},
+    {text:"母の袖", kana:"ははのそで", mora:5, roles:[0,2], tags:["家族","記憶"], mood:"soft"},
+    {text:"祖母の爪", kana:"そぼのつめ", mora:5, roles:[0,2], tags:["家族","身体"], mood:"soft"},
+    {text:"遠い家", kana:"とおいいえ", mora:5, roles:[0,2], tags:["記憶","家族"], mood:"wistful"},
+    {text:"古い声", kana:"ふるいこえ", mora:5, roles:[2,4], tags:["記憶","声"], mood:"wistful"},
+    {text:"癖だけが", kana:"くせだけが", mora:5, roles:[2,4], tags:["記憶","人物"], mood:"wistful"},
+    {text:"父の咳", kana:"ちちのせき", mora:5, roles:[0,2], tags:["家族","身体"], mood:"quiet"},
+    {text:"母の背を", kana:"ははのせを", mora:5, roles:[2], tags:["家族","記憶"], mood:"soft"},
+    {text:"古い家", kana:"ふるいいえ", mora:5, roles:[0], tags:["家族","場所"], mood:"quiet"},
+    {text:"帰る場所", kana:"かえるばしょ", mora:5, roles:[2,4], tags:["家族","場所"], mood:"wistful"},
+    {text:"写真だけ", kana:"しゃしんだけ", mora:5, roles:[0,2,4], tags:["記憶"], mood:"wistful"},
+    {text:"匂いだけ", kana:"においだけ", mora:5, roles:[2,4], tags:["記憶","匂い"], mood:"wistful"},
+    {text:"あの日から", kana:"あのひから", mora:5, roles:[0,2,4], tags:["記憶","時間"], mood:"wistful"},
+    {text:"返事待つ", kana:"へんじまつ", mora:5, roles:[2,4], tags:["関係","会話"], mood:"wistful"},
+    {text:"名を避ける", kana:"なをさける", mora:5, roles:[2], tags:["関係","言葉"], mood:"wistful"},
+    {text:"嘘だけが", kana:"うそだけが", mora:5, roles:[2,4], tags:["関係","心情"], mood:"wistful"},
+    {text:"許すふり", kana:"ゆるすふり", mora:5, roles:[2,4], tags:["関係","心情"], mood:"wistful"},
+    {text:"まだ呼べず", kana:"まだよべず", mora:5, roles:[2,4], tags:["関係","声"], mood:"wistful"},
+    {text:"隣なし", kana:"となりなし", mora:5, roles:[2,4], tags:["関係","孤独"], mood:"quiet"},
+    {text:"背でわかる", kana:"せでわかる", mora:5, roles:[2], tags:["関係","身体"], mood:"soft"},
+    {text:"言い忘れ", kana:"いいわすれ", mora:5, roles:[2,4], tags:["関係","言葉"], mood:"wistful"},
+    {text:"待ち疲れ", kana:"まちつかれ", mora:5, roles:[2,4], tags:["関係","身体"], mood:"quiet"},
+    {text:"別の顔", kana:"べつのかお", mora:5, roles:[2,4], tags:["関係","人物"], mood:"quiet"},
+    {text:"近すぎて", kana:"ちかすぎて", mora:5, roles:[2,4], tags:["関係","距離"], mood:"wistful"},
+    {text:"遠すぎて", kana:"とおすぎて", mora:5, roles:[2,4], tags:["関係","距離"], mood:"wistful"},
+    {text:"言えたなら", kana:"いえたなら", mora:5, roles:[2,4], tags:["関係","心情"], mood:"wistful"},
+    {text:"まだ好きで", kana:"まだすきで", mora:5, roles:[2,4], tags:["関係","恋"], mood:"wistful"},
+    {text:"選ばれぬ", kana:"えらばれぬ", mora:5, roles:[2,4], tags:["社会","心情"], mood:"quiet"},
+    {text:"祈りだけ", kana:"いのりだけ", mora:5, roles:[4], tags:["社会","祈り"], mood:"quiet"},
+    {text:"腹が鳴る", kana:"はらがなる", mora:5, roles:[2,4], tags:["軽み","身体"], mood:"soft"},
+    {text:"また忘れ", kana:"またわすれ", mora:5, roles:[2,4], tags:["軽み","生活"], mood:"soft"},
+    {text:"猫の腹", kana:"ねこのはら", mora:5, roles:[0,2,4], tags:["軽み","動物"], mood:"soft"},
+    {text:"空白の", kana:"くうはくの", mora:5, roles:[0], tags:["比喩","空白"], mood:"quiet"},
+    {text:"正しさが", kana:"ただしさが", mora:5, roles:[2,4], tags:["社会","判断"], mood:"quiet"},
+    {text:"灯油の匂い", kana:"とうゆのにおい", mora:7, roles:[1,4], tags:["生活","匂い"], mood:"quiet"},
+    {text:"耳鳴りの午後", kana:"みみなりのごご", mora:7, roles:[1,3], tags:["身体","時間"], mood:"quiet"},
+    {text:"コンビニ灯る", kana:"こんびにともる", mora:7, roles:[1], tags:["都市","生活"], mood:"quiet"},
+    {text:"ビル風のなか", kana:"びるかぜのなか", mora:7, roles:[1], tags:["都市","風"], mood:"calm"},
+    {text:"父の古靴", kana:"ちちのふるぐつ", mora:7, roles:[1,4], tags:["家族","記憶"], mood:"calm"},
+    {text:"昔の住所", kana:"むかしのじゅうしょ", mora:7, roles:[1,4], tags:["記憶","場所"], mood:"wistful"},
+    {text:"写真の裏に", kana:"しゃしんのうらに", mora:7, roles:[1,4], tags:["記憶","写真"], mood:"quiet"},
+    {text:"返事を待たず", kana:"へんじをまたず", mora:7, roles:[3,4], tags:["関係","会話"], mood:"wistful"},
+    {text:"名前を避けて", kana:"なまえをさけて", mora:7, roles:[3], tags:["関係","言葉"], mood:"wistful"},
+    {text:"好きとは言わず", kana:"すきとはいわず", mora:7, roles:[3,4], tags:["関係","恋"], mood:"wistful"},
+    {text:"手紙を捨てず", kana:"てがみをすてず", mora:7, roles:[3,4], tags:["関係","記憶"], mood:"wistful"},
+    {text:"許したふりで", kana:"ゆるしたふりで", mora:7, roles:[3,4], tags:["関係","心情"], mood:"wistful"},
+    {text:"怒り損ねて", kana:"おこりそこねて", mora:7, roles:[3,4], tags:["関係","心情"], mood:"wistful"},
+    {text:"まだ呼べなくて", kana:"まだよべなくて", mora:7, roles:[3,4], tags:["関係","声"], mood:"wistful"},
+    {text:"背中でわかる", kana:"せなかでわかる", mora:7, roles:[3], tags:["関係","身体"], mood:"soft"},
+    {text:"空白の骨", kana:"くうはくのほね", mora:7, roles:[1,4], tags:["比喩","空白"], mood:"quiet"},
+    {text:"未来の湿り", kana:"みらいのしめり", mora:7, roles:[4], tags:["比喩","未来"], mood:"quiet"},
+    {text:"正しさの錆", kana:"ただしさのさび", mora:7, roles:[3,4], tags:["比喩","社会"], mood:"quiet"},
+    {text:"祈りの破片", kana:"いのりのはへん", mora:7, roles:[4], tags:["比喩","祈り"], mood:"quiet"},
+    {text:"世界の継ぎ目", kana:"せかいのつぎめ", mora:7, roles:[4], tags:["比喩","世界"], mood:"quiet"},
+    {text:"ニュースの端に", kana:"にゅーすのはしに", mora:7, roles:[1], tags:["社会"], mood:"quiet"},
+    {text:"選ばれぬ声", kana:"えらばれぬこえ", mora:7, roles:[3,4], tags:["社会","声"], mood:"quiet"},
+    {text:"マスクの下で", kana:"ますくのしたで", mora:7, roles:[1,3], tags:["社会","身体"], mood:"quiet"},
+    {text:"たぶん違うね", kana:"たぶんちがうね", mora:7, roles:[4], tags:["軽み","会話"], mood:"soft"},
+    {text:"レシート長い", kana:"れしーとながい", mora:7, roles:[4], tags:["軽み","生活"], mood:"soft"},
+    {text:"猫には負ける", kana:"ねこにはまける", mora:7, roles:[4], tags:["軽み","動物"], mood:"soft"},
+    {text:"恋より眠い", kana:"こいよりねむい", mora:7, roles:[4], tags:["軽み","恋"], mood:"soft"},
+    {text:"まず湯を沸かす", kana:"まずゆをわかす", mora:7, roles:[4], tags:["軽み","生活"], mood:"calm"},
+    {text:"傘また忘れ", kana:"かさまたわすれ", mora:7, roles:[4], tags:["軽み","雨"], mood:"calm"},
+    {text:"月曜が来る", kana:"げつようがくる", mora:7, roles:[4], tags:["軽み","時間"], mood:"calm"},
+    {text:"朝の皿", kana:"あさのさら", mora:5, roles:[0,2], tags:["生活","朝"], mood:"calm"},
+    {text:"夜の匙", kana:"よるのさじ", mora:5, roles:[0,2], tags:["生活","夜"], mood:"quiet"},
+    {text:"曲がる匙", kana:"まがるさじ", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"濡れた床", kana:"ぬれたゆか", mora:5, roles:[0,2], tags:["生活","雨"], mood:"quiet"},
+    {text:"床の冷え", kana:"ゆかのひえ", mora:5, roles:[0,2], tags:["生活","感覚"], mood:"quiet"},
+    {text:"棚の奥", kana:"たなのおく", mora:5, roles:[0,2], tags:["生活","場所"], mood:"quiet"},
+    {text:"針の箱", kana:"はりのはこ", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"糸の玉", kana:"いとのたま", mora:5, roles:[0,2], tags:["生活","物"], mood:"calm"},
+    {text:"古い針", kana:"ふるいはり", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"湯のみだけ", kana:"ゆのみだけ", mora:5, roles:[0,2,4], tags:["生活","物"], mood:"quiet"},
+    {text:"茶殻まで", kana:"ちゃがらまで", mora:5, roles:[0,2,4], tags:["生活","食"], mood:"quiet"},
+    {text:"塩の粒", kana:"しおのつぶ", mora:5, roles:[0,2], tags:["生活","食"], mood:"calm"},
+    {text:"硬いパン", kana:"かたいぱん", mora:5, roles:[0,2], tags:["生活","食"], mood:"quiet"},
+    {text:"梨の皮", kana:"なしのかわ", mora:5, roles:[0,2], tags:["生活","食"], mood:"calm"},
+    {text:"鍋の底", kana:"なべのそこ", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"焦げた鍋", kana:"こげたなべ", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"値札だけ", kana:"ねふだだけ", mora:5, roles:[0,2,4], tags:["生活","買い物"], mood:"quiet"},
+    {text:"安売りの", kana:"やすうりの", mora:5, roles:[0], tags:["生活","買い物"], mood:"calm"},
+    {text:"袋詰め", kana:"ふくろづめ", mora:5, roles:[0,2], tags:["生活","買い物"], mood:"calm"},
+    {text:"小銭鳴る", kana:"こぜになる", mora:5, roles:[0,2], tags:["生活","音"], mood:"calm"},
+    {text:"釣銭を", kana:"つりせんを", mora:5, roles:[0,2], tags:["生活","買い物"], mood:"calm"},
+    {text:"午後のレジ", kana:"ごごのれじ", mora:5, roles:[0], tags:["生活","買い物"], mood:"calm"},
+    {text:"白い杖", kana:"しろいつえ", mora:5, roles:[0,2], tags:["老い","身体"], mood:"quiet"},
+    {text:"薬指", kana:"くすりゆび", mora:5, roles:[2], tags:["身体"], mood:"quiet"},
+    {text:"古い傷", kana:"ふるいきず", mora:5, roles:[2,4], tags:["身体","記憶"], mood:"quiet"},
+    {text:"遠い膝", kana:"とおいひざ", mora:5, roles:[2], tags:["身体","老い"], mood:"quiet"},
+    {text:"歩幅だけ", kana:"ほはばだけ", mora:5, roles:[2,4], tags:["身体","老い"], mood:"quiet"},
+    {text:"病室の", kana:"びょうしつの", mora:5, roles:[0], tags:["病院"], mood:"quiet"},
+    {text:"白い管", kana:"しろいくだ", mora:5, roles:[0,2], tags:["病院","身体"], mood:"quiet"},
+    {text:"点滴の", kana:"てんてきの", mora:5, roles:[0], tags:["病院"], mood:"quiet"},
+    {text:"待合で", kana:"まちあいで", mora:5, roles:[0], tags:["病院","場所"], mood:"quiet"},
+    {text:"夜勤明け", kana:"やきんあけ", mora:5, roles:[0,2], tags:["労働","時間"], mood:"quiet"},
+    {text:"名札の名", kana:"なふだのな", mora:5, roles:[0,2], tags:["労働","名前"], mood:"quiet"},
+    {text:"判子押す", kana:"はんこおす", mora:5, roles:[0,2], tags:["労働","動作"], mood:"calm"},
+    {text:"椅子を引く", kana:"いすをひく", mora:5, roles:[0,2], tags:["労働","動作"], mood:"calm"},
+    {text:"机拭く", kana:"つくえふく", mora:5, roles:[0,2], tags:["労働","動作"], mood:"calm"},
+    {text:"朝の靴", kana:"あさのくつ", mora:5, roles:[0,2], tags:["労働","身体"], mood:"calm"},
+    {text:"終業後", kana:"しゅうぎょうご", mora:5, roles:[0,2], tags:["労働","時間"], mood:"quiet"},
+    {text:"残業の", kana:"ざんぎょうの", mora:5, roles:[0], tags:["労働"], mood:"quiet"},
+    {text:"古い制服", kana:"ふるいせいふく", mora:7, roles:[1], tags:["労働","服"], mood:"quiet"},
+    {text:"腹の火を", kana:"はらのひを", mora:5, roles:[2,3], tags:["怒り","身体"], mood:"active"},
+    {text:"黙るため", kana:"だまるため", mora:5, roles:[2,4], tags:["心情"], mood:"quiet"},
+    {text:"言えぬこと", kana:"いえぬこと", mora:5, roles:[2,4], tags:["言葉","心情"], mood:"wistful"},
+    {text:"許さない", kana:"ゆるさない", mora:5, roles:[2,4], tags:["怒り"], mood:"active"},
+    {text:"もう遅い", kana:"もうおそい", mora:5, roles:[2,4], tags:["諦め"], mood:"quiet"},
+    {text:"まだ早い", kana:"まだはやい", mora:5, roles:[2,4], tags:["迷い"], mood:"calm"},
+    {text:"それも嘘", kana:"それもうそ", mora:5, roles:[2,4], tags:["心情"], mood:"wistful"},
+    {text:"嘘の底", kana:"うそのそこ", mora:5, roles:[2,4], tags:["比喩","嘘"], mood:"quiet"},
+    {text:"声を折る", kana:"こえをおる", mora:5, roles:[2,4], tags:["声","心情"], mood:"wistful"},
+    {text:"目を閉じる", kana:"めをとじる", mora:5, roles:[2,4], tags:["身体","心情"], mood:"calm"},
+    {text:"線を越す", kana:"せんをこす", mora:5, roles:[2,4], tags:["境界"], mood:"active"},
+    {text:"逃げ道を", kana:"にげみちを", mora:5, roles:[2,4], tags:["逃げる"], mood:"quiet"},
+    {text:"選ばない", kana:"えらばない", mora:5, roles:[2,4], tags:["選択"], mood:"quiet"},
+    {text:"選べない", kana:"えらべない", mora:5, roles:[2,4], tags:["選択"], mood:"wistful"},
+    {text:"虫の腹", kana:"むしのはら", mora:5, roles:[0,2], tags:["自然","身体"], mood:"quiet"},
+    {text:"鳥の影", kana:"とりのかげ", mora:5, roles:[0,2], tags:["自然"], mood:"calm"},
+    {text:"朝の泥", kana:"あさのどろ", mora:5, roles:[0,2], tags:["自然","朝"], mood:"calm"},
+    {text:"水の皺", kana:"みずのしわ", mora:5, roles:[0,2], tags:["水","比喩"], mood:"soft"},
+    {text:"波の癖", kana:"なみのくせ", mora:5, roles:[0,2], tags:["水","比喩"], mood:"soft"},
+    {text:"風の裏", kana:"かぜのうら", mora:5, roles:[0,2], tags:["自然","比喩"], mood:"quiet"},
+    {text:"雲の端", kana:"くものはし", mora:5, roles:[0,2], tags:["自然"], mood:"calm"},
+    {text:"枯れた枝", kana:"かれたえだ", mora:5, roles:[0,2], tags:["自然"], mood:"quiet"},
+    {text:"青い実を", kana:"あおいみを", mora:5, roles:[0,2], tags:["自然"], mood:"calm"},
+    {text:"雨の芯", kana:"あめのしん", mora:5, roles:[0,2], tags:["雨","比喩"], mood:"quiet"},
+    {text:"安売りの声", kana:"やすうりのこえ", mora:7, roles:[1], tags:["生活","声"], mood:"calm"},
+    {text:"袋詰めの手", kana:"ふくろづめのて", mora:7, roles:[1,3], tags:["生活","身体"], mood:"calm"},
+    {text:"白いレシート", kana:"しろいれしーと", mora:7, roles:[1,4], tags:["生活","物"], mood:"quiet"},
+    {text:"病室の窓", kana:"びょうしつのまど", mora:7, roles:[1], tags:["病院","場所"], mood:"quiet"},
+    {text:"点滴の夜", kana:"てんてきのよる", mora:7, roles:[1,4], tags:["病院","夜"], mood:"quiet"},
+    {text:"待合の椅子", kana:"まちあいのいす", mora:7, roles:[1], tags:["病院","場所"], mood:"quiet"},
+    {text:"椅子を引く朝", kana:"いすをひくあさ", mora:7, roles:[1], tags:["労働","朝"], mood:"calm"},
+    {text:"机を拭いて", kana:"つくえをふいて", mora:7, roles:[1], tags:["労働","動作"], mood:"calm"},
+    {text:"残業の月", kana:"ざんぎょうのつき", mora:7, roles:[1,4], tags:["労働","夜"], mood:"quiet"},
+    {text:"許さないまま", kana:"ゆるさないまま", mora:7, roles:[3,4], tags:["怒り"], mood:"active"},
+    {text:"まだ早いのか", kana:"まだはやいのか", mora:7, roles:[4], tags:["迷い"], mood:"calm"},
+    {text:"目を閉じたまま", kana:"めをとじたまま", mora:7, roles:[3,4], tags:["身体","心情"], mood:"calm"},
+    {text:"選ばない夜", kana:"えらばないよる", mora:7, roles:[4], tags:["選択","夜"], mood:"quiet"},
+    {text:"選べないまま", kana:"えらべないまま", mora:7, roles:[3,4], tags:["選択"], mood:"wistful"},
+    {text:"怒り損ねた", kana:"おこりそこねた", mora:7, roles:[3,4], tags:["怒り","関係"], mood:"wistful"},
+    {text:"手放せぬもの", kana:"てばなせぬもの", mora:7, roles:[3,4], tags:["関係","執着"], mood:"quiet"},
+    {text:"忘れたい声", kana:"わすれたいこえ", mora:7, roles:[3,4], tags:["記憶","声"], mood:"wistful"},
+    {text:"笑えない朝", kana:"わらえないあさ", mora:7, roles:[3,4], tags:["心情","朝"], mood:"wistful"},
+    {text:"返事を濁す", kana:"へんじをにごす", mora:7, roles:[3], tags:["会話","関係"], mood:"wistful"},
+    {text:"沈黙の列", kana:"ちんもくのれつ", mora:7, roles:[1,4], tags:["社会","比喩"], mood:"quiet"},
+    {text:"値札の奥に", kana:"ねふだのおくに", mora:7, roles:[1], tags:["社会","生活"], mood:"quiet"},
+    {text:"誰かの椅子が", kana:"だれかのいすが", mora:7, roles:[1,3], tags:["社会","不在"], mood:"quiet"},
+    {text:"壊れた橋を", kana:"こわれたはしを", mora:7, roles:[1,3], tags:["社会","比喩"], mood:"quiet"},
+    {text:"好きの底", kana:"すきのそこ", mora:5, roles:[2,4], tags:["恋","比喩"], mood:"wistful"},
+    {text:"恋の錆", kana:"こいのさび", mora:5, roles:[2,4], tags:["恋","比喩"], mood:"quiet"},
+    {text:"君の癖", kana:"きみのくせ", mora:5, roles:[2,4], tags:["恋","記憶"], mood:"wistful"},
+    {text:"君の熱", kana:"きみのねつ", mora:5, roles:[2,4], tags:["恋","身体"], mood:"wistful"},
+    {text:"君の嘘", kana:"きみのうそ", mora:5, roles:[2,4], tags:["恋","嘘"], mood:"wistful"},
+    {text:"君の靴", kana:"きみのくつ", mora:5, roles:[0,2], tags:["恋","物"], mood:"soft"},
+    {text:"君の傘", kana:"きみのかさ", mora:5, roles:[0,2], tags:["恋","雨"], mood:"soft"},
+    {text:"君の皿", kana:"きみのさら", mora:5, roles:[0,2], tags:["恋","生活"], mood:"soft"},
+    {text:"名を呼べず", kana:"なをよべず", mora:5, roles:[2,4], tags:["恋","声"], mood:"wistful"},
+    {text:"手をほどく", kana:"てをほどく", mora:5, roles:[2,4], tags:["恋","身体"], mood:"wistful"},
+    {text:"背を見てた", kana:"せをみてた", mora:5, roles:[2,4], tags:["恋","記憶"], mood:"wistful"},
+    {text:"嘘を抱く", kana:"うそをだく", mora:5, roles:[2,4], tags:["恋","嘘"], mood:"wistful"},
+    {text:"恋を干す", kana:"こいをほす", mora:5, roles:[2,4], tags:["恋","比喩"], mood:"soft"},
+    {text:"恋を煮る", kana:"こいをにる", mora:5, roles:[2,4], tags:["恋","ユーモア"], mood:"soft"},
+    {text:"恋が冷え", kana:"こいがひえ", mora:5, roles:[2,4], tags:["恋","感覚"], mood:"quiet"},
+    {text:"恋が鳴る", kana:"こいがなる", mora:5, roles:[2,4], tags:["恋","音"], mood:"soft"},
+    {text:"恋の骨", kana:"こいのほね", mora:5, roles:[2,4], tags:["恋","比喩"], mood:"quiet"},
+    {text:"恋のねじ", kana:"こいのねじ", mora:5, roles:[2,4], tags:["恋","物"], mood:"quiet"},
+    {text:"また既読", kana:"またきどく", mora:5, roles:[2,4], tags:["恋","現代"], mood:"wistful"},
+    {text:"未読だけ", kana:"みどくだけ", mora:5, roles:[2,4], tags:["恋","現代"], mood:"wistful"},
+    {text:"距離だけが", kana:"きょりだけが", mora:5, roles:[2,4], tags:["恋","距離"], mood:"wistful"},
+    {text:"近いのに", kana:"ちかいのに", mora:5, roles:[2,4], tags:["恋","距離"], mood:"wistful"},
+    {text:"遠いのに", kana:"とおいのに", mora:5, roles:[2,4], tags:["恋","距離"], mood:"wistful"},
+    {text:"好きでした", kana:"すきでした", mora:5, roles:[4], tags:["恋","会話"], mood:"wistful"},
+    {text:"恋でした", kana:"こいでした", mora:5, roles:[4], tags:["恋","会話"], mood:"wistful"},
+    {text:"腹が勝つ", kana:"はらがかつ", mora:5, roles:[2,4], tags:["ユーモア","身体"], mood:"soft"},
+    {text:"猫が勝つ", kana:"ねこがかつ", mora:5, roles:[2,4], tags:["ユーモア","動物"], mood:"soft"},
+    {text:"靴下が", kana:"くつしたが", mora:5, roles:[0,2], tags:["ユーモア","生活"], mood:"soft"},
+    {text:"鍋が鳴る", kana:"なべがなる", mora:5, roles:[0,2], tags:["ユーモア","生活"], mood:"soft"},
+    {text:"匙が逃げ", kana:"さじがにげ", mora:5, roles:[0,2], tags:["ユーモア","生活"], mood:"soft"},
+    {text:"豆腐顔", kana:"とうふがお", mora:5, roles:[2,4], tags:["ユーモア","比喩"], mood:"soft"},
+    {text:"寝癖ごと", kana:"ねぐせごと", mora:5, roles:[0,2], tags:["ユーモア","身体"], mood:"soft"},
+    {text:"鼻歌で", kana:"はなうたで", mora:5, roles:[0,2], tags:["ユーモア","音"], mood:"soft"},
+    {text:"忘れ物", kana:"わすれもの", mora:5, roles:[0,2], tags:["ユーモア","生活"], mood:"soft"},
+    {text:"また寝坊", kana:"またねぼう", mora:5, roles:[0,2], tags:["ユーモア","時間"], mood:"soft"},
+    {text:"月曜め", kana:"げつようめ", mora:5, roles:[2,4], tags:["ユーモア","時間"], mood:"soft"},
+    {text:"傘がない", kana:"かさがない", mora:5, roles:[0,2], tags:["ユーモア","雨"], mood:"soft"},
+    {text:"米がない", kana:"こめがない", mora:5, roles:[0,2], tags:["ユーモア","生活"], mood:"soft"},
+    {text:"味がない", kana:"あじがない", mora:5, roles:[0,2], tags:["ユーモア","食"], mood:"soft"},
+    {text:"たぶん猫", kana:"たぶんねこ", mora:5, roles:[2,4], tags:["ユーモア","動物"], mood:"soft"},
+    {text:"なぜそこに", kana:"なぜそこに", mora:5, roles:[2,4], tags:["ユーモア","違和感"], mood:"soft"},
+    {text:"皿の上", kana:"さらのうえ", mora:5, roles:[0,2], tags:["ユーモア","生活"], mood:"soft"},
+    {text:"空の歯を", kana:"そらのはを", mora:5, roles:[0,2], tags:["エキセントリック","比喩"], mood:"quiet"},
+    {text:"夢の肘", kana:"ゆめのひじ", mora:5, roles:[2,4], tags:["エキセントリック","夢"], mood:"quiet"},
+    {text:"夜の肺", kana:"よるのはい", mora:5, roles:[0,4], tags:["エキセントリック","身体"], mood:"quiet"},
+    {text:"月の胃が", kana:"つきのいが", mora:5, roles:[0,2], tags:["エキセントリック","身体"], mood:"quiet"},
+    {text:"声の骨", kana:"こえのほね", mora:5, roles:[2,4], tags:["エキセントリック","声"], mood:"quiet"},
+    {text:"嘘の羽", kana:"うそのはね", mora:5, roles:[2,4], tags:["エキセントリック","嘘"], mood:"soft"},
+    {text:"光る穴", kana:"ひかるあな", mora:5, roles:[0,2], tags:["エキセントリック","比喩"], mood:"quiet"},
+    {text:"雨のねじ", kana:"あめのねじ", mora:5, roles:[0,2], tags:["エキセントリック","雨"], mood:"quiet"},
+    {text:"星の咳", kana:"ほしのせき", mora:5, roles:[0,2], tags:["エキセントリック"], mood:"quiet"},
+    {text:"沈む椅子", kana:"しずむいす", mora:5, roles:[0,2], tags:["エキセントリック","物"], mood:"quiet"},
+    {text:"歩く皿", kana:"あるくさら", mora:5, roles:[0,2], tags:["エキセントリック","物"], mood:"soft"},
+    {text:"逆さ虹", kana:"さかさにじ", mora:5, roles:[0,2], tags:["エキセントリック","色"], mood:"soft"},
+    {text:"眠る地図", kana:"ねむるちず", mora:5, roles:[0,2], tags:["エキセントリック","場所"], mood:"quiet"},
+    {text:"骨の花", kana:"ほねのはな", mora:5, roles:[0,2], tags:["エキセントリック","自然"], mood:"quiet"},
+    {text:"紙の鳥", kana:"かみのとり", mora:5, roles:[0,2], tags:["エキセントリック","物"], mood:"soft"},
+    {text:"名を呼べぬまま", kana:"なをよべぬまま", mora:7, roles:[3,4], tags:["恋","声"], mood:"wistful"},
+    {text:"手をほどいた日", kana:"てをほどいたひ", mora:7, roles:[3,4], tags:["恋","身体"], mood:"wistful"},
+    {text:"鍋が鳴りだす", kana:"なべがなりだす", mora:7, roles:[1,4], tags:["ユーモア","生活"], mood:"soft"},
+    {text:"傘がないまま", kana:"かさがないまま", mora:7, roles:[1,4], tags:["ユーモア","雨"], mood:"soft"},
+    {text:"米がない朝", kana:"こめがないあさ", mora:7, roles:[1,4], tags:["ユーモア","生活"], mood:"soft"},
+    {text:"味がない恋", kana:"あじがないこい", mora:7, roles:[4], tags:["ユーモア","恋"], mood:"soft"},
+    {text:"なぜそこに靴", kana:"なぜそこにくつ", mora:7, roles:[1,4], tags:["ユーモア","違和感"], mood:"soft"},
+    {text:"やる気だけ寝る", kana:"やるきだけねる", mora:7, roles:[4], tags:["ユーモア","比喩"], mood:"soft"},
+    {text:"だいたい眠い", kana:"だいたいねむい", mora:7, roles:[4], tags:["ユーモア","身体"], mood:"soft"},
+    {text:"透明な犬", kana:"とうめいないぬ", mora:7, roles:[1,4], tags:["エキセントリック","動物"], mood:"quiet"},
+    {text:"水槽の空", kana:"すいそうのそら", mora:7, roles:[1,4], tags:["エキセントリック","水"], mood:"quiet"},
+    {text:"昨日が鳴った", kana:"きのうがなった", mora:7, roles:[4], tags:["エキセントリック","時間"], mood:"quiet"},
+    {text:"心臓のネジ", kana:"しんぞうのねじ", mora:7, roles:[3,4], tags:["エキセントリック","身体"], mood:"quiet"},
+    {text:"走り出す", kana:"はしりだす", mora:5, roles:[0,2], tags:["若さ","動作"], mood:"active"},
+    {text:"声が割れ", kana:"こえがわれ", mora:5, roles:[2,4], tags:["若さ","声"], mood:"active"},
+    {text:"膝の傷", kana:"ひざのきず", mora:5, roles:[0,2], tags:["若さ","身体"], mood:"active"},
+    {text:"青すぎる", kana:"あおすぎる", mora:5, roles:[2,4], tags:["若さ","色"], mood:"active"},
+    {text:"すぐ笑う", kana:"すぐわらう", mora:5, roles:[2,4], tags:["若さ","感情"], mood:"soft"},
+    {text:"すぐ怒る", kana:"すぐおこる", mora:5, roles:[2,4], tags:["若さ","感情"], mood:"active"},
+    {text:"まだ知らず", kana:"まだしらず", mora:5, roles:[2,4], tags:["若さ","未熟"], mood:"wistful"},
+    {text:"怖いもの", kana:"こわいもの", mora:5, roles:[2,4], tags:["若さ","未熟"], mood:"active"},
+    {text:"明日だけ", kana:"あしただけ", mora:5, roles:[2,4], tags:["若さ","未来"], mood:"active"},
+    {text:"無茶をする", kana:"むちゃをする", mora:5, roles:[2,4], tags:["若さ","動作"], mood:"active"},
+    {text:"息を切る", kana:"いきをきる", mora:5, roles:[0,2], tags:["若さ","身体"], mood:"active"},
+    {text:"名前より", kana:"なまえより", mora:5, roles:[2,4], tags:["若さ","関係"], mood:"wistful"},
+    {text:"光りすぎ", kana:"ひかりすぎ", mora:5, roles:[2,4], tags:["若さ","光"], mood:"active"},
+    {text:"夏を蹴る", kana:"なつをける", mora:5, roles:[0,2], tags:["若さ","季節"], mood:"active"},
+    {text:"坂を飛ぶ", kana:"さかをとぶ", mora:5, roles:[0,2], tags:["若さ","動作"], mood:"active"},
+    {text:"裸足だけ", kana:"はだしだけ", mora:5, roles:[0,2], tags:["若さ","身体"], mood:"active"},
+    {text:"小さな手", kana:"ちいさなて", mora:5, roles:[0,2], tags:["子ども","身体"], mood:"soft"},
+    {text:"泥の靴", kana:"どろのくつ", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"active"},
+    {text:"虫かごに", kana:"むしかごに", mora:5, roles:[0,2], tags:["子ども","虫"], mood:"calm"},
+    {text:"転んでも", kana:"ころんでも", mora:5, roles:[2,4], tags:["子ども","動作"], mood:"active"},
+    {text:"泣きやまず", kana:"なきやまず", mora:5, roles:[2,4], tags:["子ども","感情"], mood:"active"},
+    {text:"影を踏む", kana:"かげをふむ", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"soft"},
+    {text:"秘密基地", kana:"ひみつきち", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"active"},
+    {text:"砂の城", kana:"すなのしろ", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"soft"},
+    {text:"ラムネ玉", kana:"らむねだま", mora:5, roles:[0,2], tags:["子ども","食"], mood:"soft"},
+    {text:"シャボン玉", kana:"しゃぼんだま", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"soft"},
+    {text:"草の笛", kana:"くさのふえ", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"soft"},
+    {text:"ビー玉を", kana:"びーだまを", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"soft"},
+    {text:"空き箱に", kana:"あきばこに", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"soft"},
+    {text:"歯抜け顔", kana:"はぬけがお", mora:5, roles:[0,2], tags:["子ども","身体"], mood:"soft"},
+    {text:"昼の泥", kana:"ひるのどろ", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"active"},
+    {text:"寝息だけ", kana:"ねいきだけ", mora:5, roles:[2,4], tags:["子ども","親"], mood:"soft"},
+    {text:"名前呼ぶ", kana:"なまえよぶ", mora:5, roles:[2,4], tags:["子ども","親"], mood:"soft"},
+    {text:"抱き上げる", kana:"だきあげる", mora:5, roles:[2,4], tags:["子ども","親"], mood:"soft"},
+    {text:"泣き声が", kana:"なきごえが", mora:5, roles:[0,2], tags:["子ども","親"], mood:"active"},
+    {text:"手を離す", kana:"てをはなす", mora:5, roles:[2,4], tags:["子ども","親"], mood:"wistful"},
+    {text:"はじめての", kana:"はじめての", mora:5, roles:[0,2], tags:["子ども","成長"], mood:"soft"},
+    {text:"寝顔だけ", kana:"ねがおだけ", mora:5, roles:[2,4], tags:["子ども","親"], mood:"soft"},
+    {text:"手の熱を", kana:"てのねつを", mora:5, roles:[2], tags:["子ども","親"], mood:"soft"},
+    {text:"背を追って", kana:"せをおって", mora:5, roles:[2], tags:["子ども","親"], mood:"wistful"},
+    {text:"声を待つ", kana:"こえをまつ", mora:5, roles:[2,4], tags:["子ども","親"], mood:"wistful"},
+    {text:"泣いたあと", kana:"ないたあと", mora:5, roles:[2,4], tags:["子ども","親"], mood:"soft"},
+    {text:"笑うまで", kana:"わらうまで", mora:5, roles:[2,4], tags:["子ども","親"], mood:"soft"},
+    {text:"なぜと聞く", kana:"なぜときく", mora:5, roles:[2,4], tags:["子ども","問い"], mood:"soft"},
+    {text:"じっと見る", kana:"じっとみる", mora:5, roles:[2,4], tags:["子ども","視線"], mood:"quiet"},
+    {text:"蟻の墓", kana:"ありのはか", mora:5, roles:[0,2], tags:["子ども","虫"], mood:"quiet"},
+    {text:"神さまを", kana:"かみさまを", mora:5, roles:[0,2], tags:["子ども","祈り"], mood:"soft"},
+    {text:"影の友", kana:"かげのとも", mora:5, roles:[0,2], tags:["子ども","不思議"], mood:"quiet"},
+    {text:"笑い出す", kana:"わらいだす", mora:5, roles:[2,4], tags:["子ども","不思議"], mood:"soft"},
+    {text:"雲を飼う", kana:"くもをかう", mora:5, roles:[0,2], tags:["子ども","不思議"], mood:"soft"},
+    {text:"水に聞く", kana:"みずにきく", mora:5, roles:[0,2], tags:["子ども","不思議"], mood:"soft"},
+    {text:"目が合って", kana:"めがあって", mora:5, roles:[2,4], tags:["若い恋","恋"], mood:"soft"},
+    {text:"すぐそらす", kana:"すぐそらす", mora:5, roles:[2,4], tags:["若い恋","恋"], mood:"soft"},
+    {text:"手も触れず", kana:"てもふれず", mora:5, roles:[2,4], tags:["若い恋","身体"], mood:"wistful"},
+    {text:"消しゴムを", kana:"けしごむを", mora:5, roles:[0,2], tags:["若い恋","物"], mood:"soft"},
+    {text:"貸したまま", kana:"かしたまま", mora:5, roles:[2,4], tags:["若い恋","関係"], mood:"soft"},
+    {text:"声が跳ね", kana:"こえがはね", mora:5, roles:[2,4], tags:["若い恋","声"], mood:"soft"},
+    {text:"自転車で", kana:"じてんしゃで", mora:5, roles:[0,2], tags:["若い恋","移動"], mood:"soft"},
+    {text:"夕日だけ", kana:"ゆうひだけ", mora:5, roles:[0,2,4], tags:["若い恋","時間"], mood:"soft"},
+    {text:"遠回り", kana:"とおまわり", mora:5, roles:[0,2], tags:["若い恋","動作"], mood:"soft"},
+    {text:"指が触れ", kana:"ゆびがふれ", mora:5, roles:[2,4], tags:["若い恋","身体"], mood:"soft"},
+    {text:"まだ言えず", kana:"まだいえず", mora:5, roles:[2,4], tags:["若い恋","心情"], mood:"wistful"},
+    {text:"汗のシャツ", kana:"あせのしゃつ", mora:5, roles:[0,2], tags:["若い恋","身体"], mood:"soft"},
+    {text:"背が伸びる", kana:"せがのびる", mora:5, roles:[2,4], tags:["成長","身体"], mood:"soft"},
+    {text:"部屋を出る", kana:"へやをでる", mora:5, roles:[2,4], tags:["成長","巣立ち"], mood:"wistful"},
+    {text:"振り向かず", kana:"ふりむかず", mora:5, roles:[2,4], tags:["成長","巣立ち"], mood:"wistful"},
+    {text:"親の背を", kana:"おやのせを", mora:5, roles:[2], tags:["成長","家族"], mood:"wistful"},
+    {text:"鍵を持つ", kana:"かぎをもつ", mora:5, roles:[2], tags:["成長","生活"], mood:"soft"},
+    {text:"ひとり分", kana:"ひとりぶん", mora:5, roles:[2,4], tags:["成長","孤独"], mood:"wistful"},
+    {text:"部屋の鍵", kana:"へやのかぎ", mora:5, roles:[2,4], tags:["成長","場所"], mood:"wistful"},
+    {text:"靴の箱", kana:"くつのはこ", mora:5, roles:[0,2], tags:["成長","物"], mood:"wistful"},
+    {text:"青すぎるシャツ", kana:"あおすぎるしゃつ", mora:7, roles:[1,3], tags:["若さ","服"], mood:"active"},
+    {text:"シャボン玉追う", kana:"しゃぼんだまおう", mora:7, roles:[1], tags:["子ども","遊び"], mood:"soft"},
+    {text:"空き箱に住む", kana:"あきばこにすむ", mora:7, roles:[1], tags:["子ども","遊び"], mood:"soft"},
+    {text:"寝息だけ聞く", kana:"ねいきだけきく", mora:7, roles:[3,4], tags:["子ども","親"], mood:"soft"},
+    {text:"帰り道の手", kana:"かえりみちのて", mora:7, roles:[1,3], tags:["子ども","親"], mood:"soft"},
+    {text:"なぜを何度も", kana:"なぜをなんども", mora:7, roles:[3,4], tags:["子ども","問い"], mood:"soft"},
+    {text:"自転車で行く", kana:"じてんしゃでいく", mora:7, roles:[1], tags:["若い恋","移動"], mood:"soft"},
+    {text:"名を呼べぬ舌", kana:"なをよべぬした", mora:7, roles:[3,4], tags:["恋","身体"], mood:"wistful"},
+    {text:"手をほどく朝", kana:"てをほどくあさ", mora:7, roles:[3,4], tags:["恋","朝"], mood:"wistful"},
+    {text:"青すぎる午後", kana:"あおすぎるごご", mora:7, roles:[1,3], tags:["若さ","時間"], mood:"active"},
+    {text:"ビー玉に空", kana:"びーだまにそら", mora:7, roles:[1], tags:["子ども","遊び"], mood:"soft"},
+    {text:"空き箱が船", kana:"あきばこがふね", mora:7, roles:[1], tags:["子ども","遊び"], mood:"soft"},
+    {text:"手を離す朝", kana:"てをはなすあさ", mora:7, roles:[3,4], tags:["子ども","親"], mood:"wistful"},
+    {text:"部屋を出てゆく", kana:"へやをでてゆく", mora:7, roles:[3,4], tags:["成長","巣立ち"], mood:"wistful"},
+    {text:"親の背を抜く", kana:"おやのせをぬく", mora:7, roles:[3,4], tags:["成長","家族"], mood:"wistful"},
+    {text:"鍵を持つ朝", kana:"かぎをもつあさ", mora:7, roles:[3,4], tags:["成長","生活"], mood:"soft"},
+    {text:"猫には負けた", kana:"ねこにはまけた", mora:7, roles:[4], tags:["ユーモア","動物"], mood:"soft"},
+    {text:"湯気の向こうへ", kana:"ゆげのむこうへ", mora:7, roles:[1,4], tags:["生活","距離"], mood:"soft"},
+    {text:"まだ呼べぬ声", kana:"まだよべぬこえ", mora:7, roles:[3,4], tags:["関係","声"], mood:"wistful"},
+    {text:"名前欄", kana:"なまえらん", mora:5, roles:[0,2], tags:["言葉","名前"], mood:"quiet"},
+    {text:"白チョーク", kana:"しろちょーく", mora:5, roles:[0,2], tags:["学校","物"], mood:"calm"},
+    {text:"赤い丸", kana:"あかいまる", mora:5, roles:[0,2], tags:["学校","記号"], mood:"calm"},
+    {text:"保健室", kana:"ほけんしつ", mora:5, roles:[0,2], tags:["場所","身体"], mood:"quiet"},
+    {text:"線を消す", kana:"せんをけす", mora:5, roles:[2,4], tags:["動作","言葉"], mood:"quiet"},
+    {text:"手を挙げる", kana:"てをあげる", mora:5, roles:[0,2], tags:["身体","動作"], mood:"calm"},
+    {text:"目を伏せる", kana:"めをふせる", mora:5, roles:[2,4], tags:["身体","心情"], mood:"quiet"},
+    {text:"席を立つ", kana:"せきをたつ", mora:5, roles:[0,2], tags:["動作","場所"], mood:"calm"},
+    {text:"笛の音", kana:"ふえのおと", mora:5, roles:[0,2], tags:["音"], mood:"calm"},
+    {text:"昼休み", kana:"ひるやすみ", mora:5, roles:[0,2], tags:["時間"], mood:"soft"},
+    {text:"白い線", kana:"しろいせん", mora:5, roles:[0,2], tags:["線","色"], mood:"calm"},
+    {text:"砂ぼこり", kana:"すなぼこり", mora:5, roles:[0,2], tags:["自然","場所"], mood:"calm"},
+    {text:"リコーダー", kana:"りこーだー", mora:5, roles:[0,2], tags:["音","物"], mood:"soft"},
+    {text:"赤シート", kana:"あかしーと", mora:5, roles:[0,2], tags:["物","色"], mood:"calm"},
+    {text:"単語帳", kana:"たんごちょう", mora:5, roles:[0,2], tags:["言葉","物"], mood:"calm"},
+    {text:"駅裏で", kana:"えきうらで", mora:5, roles:[0], tags:["都市","場所"], mood:"quiet"},
+    {text:"始発前", kana:"しはつまえ", mora:5, roles:[0], tags:["都市","時間"], mood:"quiet"},
+    {text:"地下道で", kana:"ちかどうで", mora:5, roles:[0], tags:["都市","場所"], mood:"quiet"},
+    {text:"踏切で", kana:"ふみきりで", mora:5, roles:[0], tags:["都市","場所"], mood:"calm"},
+    {text:"バス停で", kana:"ばすていで", mora:5, roles:[0], tags:["都市","場所"], mood:"calm"},
+    {text:"時刻表", kana:"じこくひょう", mora:5, roles:[0,2], tags:["都市","時間"], mood:"quiet"},
+    {text:"乗り換えを", kana:"のりかえを", mora:5, roles:[0,2], tags:["都市","移動"], mood:"quiet"},
+    {text:"コンビニで", kana:"こんびにで", mora:5, roles:[0], tags:["都市","生活"], mood:"calm"},
+    {text:"レジ袋", kana:"れじぶくろ", mora:5, roles:[0,2], tags:["生活","買い物"], mood:"calm"},
+    {text:"電子音", kana:"でんしおん", mora:5, roles:[0,2], tags:["現代","音"], mood:"quiet"},
+    {text:"非常灯", kana:"ひじょうとう", mora:5, roles:[0,2], tags:["都市","光"], mood:"quiet"},
+    {text:"団地裏", kana:"だんちうら", mora:5, roles:[0], tags:["都市","場所"], mood:"quiet"},
+    {text:"交差点", kana:"こうさてん", mora:5, roles:[0], tags:["都市","場所"], mood:"calm"},
+    {text:"パスワード", kana:"ぱすわーど", mora:5, roles:[0,2], tags:["現代","言葉"], mood:"quiet"},
+    {text:"未送信", kana:"みそうしん", mora:5, roles:[2,4], tags:["現代","関係"], mood:"wistful"},
+    {text:"画面越し", kana:"がめんごし", mora:5, roles:[2,4], tags:["現代","距離"], mood:"wistful"},
+    {text:"圏外で", kana:"けんがいで", mora:5, roles:[0,2], tags:["現代","場所"], mood:"quiet"},
+    {text:"台所", kana:"だいどころ", mora:5, roles:[0,2], tags:["生活","場所"], mood:"calm"},
+    {text:"洗面所", kana:"せんめんじょ", mora:5, roles:[0,2], tags:["生活","場所"], mood:"calm"},
+    {text:"換気口", kana:"かんきこう", mora:5, roles:[0,2], tags:["生活","場所"], mood:"quiet"},
+    {text:"冷蔵庫", kana:"れいぞうこ", mora:5, roles:[0,2], tags:["生活","物"], mood:"calm"},
+    {text:"炊飯器", kana:"すいはんき", mora:5, roles:[0,2], tags:["生活","食"], mood:"calm"},
+    {text:"白い米", kana:"しろいこめ", mora:5, roles:[0,2], tags:["生活","食"], mood:"calm"},
+    {text:"洗濯機", kana:"せんたくき", mora:5, roles:[0,2], tags:["生活","物"], mood:"calm"},
+    {text:"段ボール", kana:"だんぼーる", mora:5, roles:[0,2], tags:["生活","物"], mood:"calm"},
+    {text:"ゴミ袋", kana:"ごみぶくろ", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"紙袋", kana:"かみぶくろ", mora:5, roles:[0,2], tags:["生活","物"], mood:"calm"},
+    {text:"割れた皿", kana:"われたさら", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"欠けた椀", kana:"かけたわん", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"古い鍵", kana:"ふるいかぎ", mora:5, roles:[0,2], tags:["生活","物"], mood:"quiet"},
+    {text:"傘の骨", kana:"かさのほね", mora:5, roles:[0,2], tags:["生活","雨"], mood:"quiet"},
+    {text:"枕元", kana:"まくらもと", mora:5, roles:[0,2], tags:["生活","場所"], mood:"quiet"},
+    {text:"爪切りを", kana:"つめきりを", mora:5, roles:[0,2], tags:["生活","身体"], mood:"calm"},
+    {text:"耳かきを", kana:"みみかきを", mora:5, roles:[0,2], tags:["生活","身体"], mood:"calm"},
+    {text:"喉の奥", kana:"のどのおく", mora:5, roles:[2,4], tags:["身体"], mood:"quiet"},
+    {text:"舌先に", kana:"したさきに", mora:5, roles:[2], tags:["身体"], mood:"quiet"},
+    {text:"足首を", kana:"あしくびを", mora:5, roles:[2], tags:["身体"], mood:"quiet"},
+    {text:"前髪を", kana:"まえがみを", mora:5, roles:[0,2], tags:["身体"], mood:"soft"},
+    {text:"息浅く", kana:"いきあさく", mora:5, roles:[2,4], tags:["身体"], mood:"quiet"},
+    {text:"咳ひとつ", kana:"せきひとつ", mora:5, roles:[2,4], tags:["身体"], mood:"quiet"},
+    {text:"肩の骨", kana:"かたのほね", mora:5, roles:[2,4], tags:["身体"], mood:"quiet"},
+    {text:"レンジ前", kana:"れんじまえ", mora:5, roles:[0,2], tags:["生活","場所"], mood:"calm"},
+    {text:"二番目の窓", kana:"にばんめのまど", mora:7, roles:[1], tags:["場所","窓"], mood:"quiet"},
+    {text:"エレベーターで", kana:"えれべーたーで", mora:7, roles:[1], tags:["都市","移動"], mood:"quiet"},
+    {text:"カメラ目線で", kana:"かめらめせんで", mora:7, roles:[1,3], tags:["現代","視線"], mood:"quiet"},
+    {text:"薬の袋", kana:"くすりのふくろ", mora:7, roles:[1,3], tags:["生活","身体"], mood:"quiet"},
+    {text:"乗り換え迷う", kana:"のりかえまよう", mora:7, roles:[1,3], tags:["都市","移動"], mood:"quiet"},
+    {text:"補習後の空", kana:"ほしゅうごのそら", mora:7, roles:[1,4], tags:["時間","空"], mood:"calm"},
+    {text:"試合後の砂", kana:"しあいごのすな", mora:7, roles:[1,4], tags:["時間","砂"], mood:"calm"},
+    {text:"絵の具が乾く", kana:"えのぐがかわく", mora:7, roles:[1], tags:["色","動作"], mood:"calm"},
+    {text:"二号車の隅", kana:"にごうしゃのすみ", mora:7, roles:[1], tags:["都市","移動"], mood:"quiet"},
+    {text:"ログインできず", kana:"ろぐいんできず", mora:7, roles:[1], tags:["現代","失敗"], mood:"quiet"},
+    {text:"履歴を消した", kana:"りれきをけした", mora:7, roles:[3,4], tags:["現代","記憶"], mood:"quiet"},
+    {text:"コピーして消す", kana:"こぴーしてけす", mora:7, roles:[1], tags:["現代","動作"], mood:"quiet"},
+    {text:"アプリを閉じる", kana:"あぷりをとじる", mora:7, roles:[1], tags:["現代","動作"], mood:"quiet"},
+    {text:"カードが曲がる", kana:"かーどがまがる", mora:7, roles:[1], tags:["生活","物"], mood:"quiet"},
+    {text:"手のひらが汗", kana:"てのひらがあせ", mora:7, roles:[3,4], tags:["身体"], mood:"quiet"},
+    {text:"まぶたが重い", kana:"まぶたがおもい", mora:7, roles:[3,4], tags:["身体"], mood:"quiet"},
+    {text:"息を吐ききる", kana:"いきをはききる", mora:7, roles:[3,4], tags:["身体"], mood:"quiet"},
+    {text:"胃が重くなる", kana:"いがおもくなる", mora:7, roles:[3,4], tags:["身体"], mood:"quiet"},
+    {text:"声が出なかった", kana:"こえがでなかった", mora:8, roles:[3,4], tags:["声"], mood:"wistful"},
+    {text:"言いかけて飲む", kana:"いいかけてのむ", mora:7, roles:[3,4], tags:["言葉","心情"], mood:"wistful"},
+    {text:"言い過ぎたあと", kana:"いいすぎたあと", mora:7, roles:[3,4], tags:["言葉","心情"], mood:"wistful"},
+    {text:"気まずさを抱く", kana:"きまずさをだく", mora:7, roles:[3,4], tags:["心情"], mood:"wistful"},
+    {text:"許したいふり", kana:"ゆるしたいふり", mora:7, roles:[3,4], tags:["心情","関係"], mood:"wistful"},
+    {text:"別にいいけど", kana:"べつにいいけど", mora:7, roles:[3,4], tags:["会話"], mood:"soft"},
+    {text:"ごめんねを待つ", kana:"ごめんねをまつ", mora:7, roles:[3,4], tags:["会話","関係"], mood:"wistful"},
+    {text:"好きかもねって", kana:"すきかもねって", mora:7, roles:[3,4], tags:["恋","会話"], mood:"soft"},
+    {text:"皿の裏側", kana:"さらのうらがわ", mora:7, roles:[1,4], tags:["生活","物"], mood:"quiet"},
+    {text:"鍋底の月", kana:"なべぞこのつき", mora:7, roles:[1,4], tags:["生活","比喩"], mood:"quiet"},
+    {text:"匙のぬくもり", kana:"さじのぬくもり", mora:7, roles:[1,4], tags:["生活","物"], mood:"soft"},
+    {text:"塩のかたまり", kana:"しおのかたまり", mora:7, roles:[1], tags:["生活","食"], mood:"calm"},
+    {text:"米を研ぐ夜", kana:"こめをとぐよる", mora:7, roles:[1], tags:["生活","夜"], mood:"calm"},
+    {text:"粥のぬくもり", kana:"かゆのぬくもり", mora:7, roles:[1,4], tags:["生活","食"], mood:"soft"},
+    {text:"味噌汁の湯気", kana:"みそしるのゆげ", mora:7, roles:[1], tags:["生活","食"], mood:"calm"},
+    {text:"茶碗の欠け目", kana:"ちゃわんのかけめ", mora:7, roles:[1], tags:["生活","物"], mood:"quiet"},
+    {text:"包丁の影", kana:"ほうちょうのかげ", mora:7, roles:[1,4], tags:["生活","物"], mood:"quiet"},
+    {text:"まな板の傷", kana:"まないたのきず", mora:7, roles:[1,4], tags:["生活","物"], mood:"quiet"},
+    {text:"布団の重さ", kana:"ふとんのおもさ", mora:7, roles:[1,4], tags:["生活","身体"], mood:"quiet"},
+    {text:"枕の沈み", kana:"まくらのしずみ", mora:7, roles:[1,4], tags:["生活","夜"], mood:"quiet"},
+    {text:"カーテンの夜", kana:"かーてんのよる", mora:7, roles:[1,4], tags:["生活","部屋"], mood:"quiet"},
+    {text:"玄関の雨", kana:"げんかんのあめ", mora:7, roles:[1], tags:["生活","雨"], mood:"quiet"},
+    {text:"窓の水滴", kana:"まどのすいてき", mora:7, roles:[1], tags:["生活","水"], mood:"calm"},
+    {text:"畳のくぼみ", kana:"たたみのくぼみ", mora:7, roles:[1], tags:["生活","家"], mood:"quiet"},
+    {text:"押入れの闇", kana:"おしいれのやみ", mora:7, roles:[1,4], tags:["生活","家"], mood:"quiet"},
+    {text:"洗面の朝", kana:"せんめんのあさ", mora:7, roles:[1], tags:["生活","朝"], mood:"calm"},
+    {text:"排水の渦", kana:"はいすいのうず", mora:7, roles:[1], tags:["生活","水"], mood:"quiet"},
+    {text:"換気扇鳴る", kana:"かんきせんなる", mora:7, roles:[1], tags:["生活","音"], mood:"quiet"},
+    {text:"冷凍の霜", kana:"れいとうのしも", mora:7, roles:[1], tags:["生活","食"], mood:"quiet"},
+    {text:"レシートの雨", kana:"れしーとのあめ", mora:7, roles:[4], tags:["生活","買い物"], mood:"soft"},
+    {text:"財布の呼吸", kana:"さいふのこきゅう", mora:7, roles:[4], tags:["生活","比喩"], mood:"soft"},
+    {text:"値札の孤独", kana:"ねふだのこどく", mora:7, roles:[4], tags:["生活","買い物"], mood:"quiet"},
+    {text:"小銭の匂い", kana:"こぜにのにおい", mora:7, roles:[1,4], tags:["生活","買い物"], mood:"calm"},
+    {text:"レジ前の夕", kana:"れじまえのゆう", mora:7, roles:[1,4], tags:["生活","買い物"], mood:"calm"},
+    {text:"喉奥の雨", kana:"のどおくのあめ", mora:7, roles:[3,4], tags:["身体","雨"], mood:"quiet"},
+    {text:"うなじの湿り", kana:"うなじのしめり", mora:7, roles:[3,4], tags:["身体","感覚"], mood:"quiet"},
+    {text:"鎖骨のあたり", kana:"さこつのあたり", mora:7, roles:[3,4], tags:["身体"], mood:"quiet"},
+    {text:"耳奥の海", kana:"みみおくのうみ", mora:7, roles:[3,4], tags:["身体","比喩"], mood:"quiet"},
+    {text:"背中の夕日", kana:"せなかのゆうひ", mora:7, roles:[3,4], tags:["身体","記憶"], mood:"wistful"},
+    {text:"指先の嘘", kana:"ゆびさきのうそ", mora:7, roles:[3,4], tags:["身体","嘘"], mood:"wistful"},
+    {text:"爪先の朝", kana:"つまさきのあさ", mora:7, roles:[3,4], tags:["身体","朝"], mood:"calm"},
+    {text:"まぶたの裏へ", kana:"まぶたのうらへ", mora:7, roles:[3,4], tags:["身体","夢"], mood:"quiet"},
+    {text:"胸奥の匙", kana:"むねおくのさじ", mora:7, roles:[3,4], tags:["身体","比喩"], mood:"quiet"},
+    {text:"骨の沈黙", kana:"ほねのちんもく", mora:7, roles:[4], tags:["身体","比喩"], mood:"quiet"},
+    {text:"くしゃみの跡へ", kana:"くしゃみのあとへ", mora:7, roles:[3,4], tags:["身体"], mood:"soft"},
+    {text:"胃薬の白", kana:"いぐすりのしろ", mora:7, roles:[3,4], tags:["身体","薬"], mood:"quiet"},
+    {text:"左手の熱", kana:"ひだりてのねつ", mora:7, roles:[3,4], tags:["身体","感覚"], mood:"wistful"},
+    {text:"右手の迷い", kana:"みぎてのまよい", mora:7, roles:[3,4], tags:["身体","心情"], mood:"wistful"},
+    {text:"手首の痛み", kana:"てくびのいたみ", mora:7, roles:[3,4], tags:["身体"], mood:"quiet"},
+    {text:"こめかみの月", kana:"こめかみのつき", mora:7, roles:[3,4], tags:["身体","比喩"], mood:"quiet"},
+    {text:"こめかみの雨", kana:"こめかみのあめ", mora:7, roles:[3,4], tags:["身体","雨"], mood:"quiet"},
+    {text:"肩甲骨が", kana:"けんこうこつが", mora:7, roles:[3], tags:["身体"], mood:"quiet"},
+    {text:"遅い返事の", kana:"おそいへんじの", mora:7, roles:[3,4], tags:["老い","関係"], mood:"quiet"},
+    {text:"薬を分ける", kana:"くすりをわける", mora:7, roles:[1,3], tags:["老い","生活"], mood:"quiet"},
+    {text:"時計を見ない", kana:"とけいをみない", mora:7, roles:[3,4], tags:["老い","時間"], mood:"quiet"},
+    {text:"恋の置き場所", kana:"こいのおきばしょ", mora:7, roles:[3,4], tags:["恋","場所"], mood:"wistful"},
+    {text:"好きの置き場所", kana:"すきのおきばしょ", mora:7, roles:[3,4], tags:["恋","場所"], mood:"wistful"},
+    {text:"君の横顔", kana:"きみのよこがお", mora:7, roles:[3,4], tags:["恋","身体"], mood:"soft"},
+    {text:"君の首筋", kana:"きみのくびすじ", mora:7, roles:[3,4], tags:["恋","身体"], mood:"soft"},
+    {text:"君の体温", kana:"きみのたいおん", mora:7, roles:[3,4], tags:["恋","身体"], mood:"wistful"},
+    {text:"君との距離が", kana:"きみとのきょりが", mora:7, roles:[3,4], tags:["恋","距離"], mood:"wistful"},
+    {text:"名前の余熱", kana:"なまえのよねつ", mora:7, roles:[3,4], tags:["恋","名前"], mood:"wistful"},
+    {text:"返事の余熱", kana:"へんじのよねつ", mora:7, roles:[3,4], tags:["恋","会話"], mood:"wistful"},
+    {text:"未読の夜明け", kana:"みどくのよあけ", mora:7, roles:[3,4], tags:["恋","現代"], mood:"wistful"},
+    {text:"既読の深さ", kana:"きどくのふかさ", mora:7, roles:[3,4], tags:["恋","現代"], mood:"wistful"},
+    {text:"返信の雨", kana:"へんしんのあめ", mora:7, roles:[3,4], tags:["恋","現代"], mood:"wistful"},
+    {text:"待ち合わせ跡", kana:"まちあわせあと", mora:7, roles:[3,4], tags:["恋","記憶"], mood:"wistful"},
+    {text:"手のひらの距離", kana:"てのひらのきょり", mora:7, roles:[3,4], tags:["恋","身体"], mood:"wistful"},
+    {text:"指先の距離", kana:"ゆびさきのきょり", mora:7, roles:[3,4], tags:["恋","身体"], mood:"wistful"},
+    {text:"さよならの前", kana:"さよならのまえ", mora:7, roles:[3,4], tags:["恋","別れ"], mood:"wistful"},
+    {text:"ただいまの嘘", kana:"ただいまのうそ", mora:7, roles:[3,4], tags:["関係","家族"], mood:"wistful"},
+    {text:"おかえりの嘘", kana:"おかえりのうそ", mora:7, roles:[3,4], tags:["関係","家族"], mood:"wistful"},
+    {text:"泥だらけの手", kana:"どろだらけのて", mora:7, roles:[1,3], tags:["子ども","遊び"], mood:"active"},
+    {text:"石ころの声", kana:"いしころのこえ", mora:7, roles:[1,4], tags:["子ども","不思議"], mood:"soft"},
+    {text:"泥のくるぶし", kana:"どろのくるぶし", mora:7, roles:[1,3], tags:["子ども","身体"], mood:"active"},
+    {text:"秘密基地跡", kana:"ひみつきちあと", mora:7, roles:[1,4], tags:["子ども","記憶"], mood:"wistful"},
+    {text:"ラムネの青さ", kana:"らむねのあおさ", mora:7, roles:[1,4], tags:["子ども","食"], mood:"soft"},
+    {text:"シャボンの匂い", kana:"しゃぼんのにおい", mora:7, roles:[1,4], tags:["子ども","遊び"], mood:"soft"},
+    {text:"折り紙の角", kana:"おりがみのかど", mora:7, roles:[1,4], tags:["子ども","遊び"], mood:"soft"},
+    {text:"画用紙の海", kana:"がようしのうみ", mora:7, roles:[1,4], tags:["子ども","不思議"], mood:"soft"},
+    {text:"クレヨンの夜", kana:"くれよんのよる", mora:7, roles:[1,4], tags:["子ども","色"], mood:"soft"},
+    {text:"図鑑の余白", kana:"ずかんのよはく", mora:7, roles:[1,4], tags:["子ども","本"], mood:"soft"},
+    {text:"虫かごの闇", kana:"むしかごのやみ", mora:7, roles:[1,4], tags:["子ども","虫"], mood:"quiet"},
+    {text:"帽子のひさし", kana:"ぼうしのひさし", mora:7, roles:[1], tags:["子ども","服"], mood:"soft"},
+    {text:"小さな背中", kana:"ちいさなせなか", mora:7, roles:[3,4], tags:["子ども","親"], mood:"soft"},
+    {text:"小さな寝息", kana:"ちいさなねいき", mora:7, roles:[3,4], tags:["子ども","親"], mood:"soft"},
+    {text:"初めての嘘", kana:"はじめてのうそ", mora:7, roles:[3,4], tags:["子ども","成長"], mood:"wistful"},
+    {text:"初めての雨", kana:"はじめてのあめ", mora:7, roles:[1,4], tags:["子ども","成長"], mood:"soft"},
+    {text:"子どもの疑問", kana:"こどものぎもん", mora:7, roles:[1,4], tags:["子ども","問い"], mood:"soft"},
+    {text:"子どもの真顔", kana:"こどものまがお", mora:7, roles:[1,4], tags:["子ども","不思議"], mood:"quiet"},
+    {text:"泣き声の朝", kana:"なきごえのあさ", mora:7, roles:[1,4], tags:["子ども","親"], mood:"soft"},
+    {text:"寝顔の重さ", kana:"ねがおのおもさ", mora:7, roles:[3,4], tags:["子ども","親"], mood:"soft"},
+    {text:"手の熱のこる", kana:"てのねつのこる", mora:7, roles:[3,4], tags:["子ども","親"], mood:"soft"},
+    {text:"明細の白", kana:"めいさいのしろ", mora:7, roles:[1,4], tags:["労働","生活"], mood:"quiet"},
+    {text:"給料日前", kana:"きゅうりょうびまえ", mora:7, roles:[1,4], tags:["労働","生活"], mood:"quiet"},
+    {text:"休憩の椅子", kana:"きゅうけいのいす", mora:7, roles:[1], tags:["労働","場所"], mood:"quiet"},
+    {text:"ロッカーの闇", kana:"ろっかーのやみ", mora:7, roles:[1], tags:["労働","場所"], mood:"quiet"},
+    {text:"制服の皺", kana:"せいふくのしわ", mora:7, roles:[1], tags:["労働","服"], mood:"quiet"},
+    {text:"作業着の汗", kana:"さぎょうぎのあせ", mora:7, roles:[1], tags:["労働","身体"], mood:"quiet"},
+    {text:"判子の沈み", kana:"はんこのしずみ", mora:7, roles:[1], tags:["労働","物"], mood:"quiet"},
+    {text:"机の眠り", kana:"つくえのねむり", mora:7, roles:[1], tags:["労働","物"], mood:"quiet"},
+    {text:"昼の眠気へ", kana:"ひるのねむけへ", mora:7, roles:[1], tags:["労働","身体"], mood:"quiet"},
+    {text:"遠い拍手の", kana:"とおいはくしゅの", mora:7, roles:[1], tags:["社会","音"], mood:"quiet"},
+    {text:"拍手の孤独", kana:"はくしゅのこどく", mora:7, roles:[1,4], tags:["社会","音"], mood:"quiet"},
+    {text:"ニュースの滲み", kana:"にゅーすのにじみ", mora:7, roles:[1], tags:["社会"], mood:"quiet"},
+    {text:"紙幣の湿り", kana:"しへいのしめり", mora:7, roles:[1], tags:["社会","生活"], mood:"quiet"},
+    {text:"マスクの湿り", kana:"ますくのしめり", mora:7, roles:[1], tags:["社会","身体"], mood:"quiet"},
+    {text:"戦火の湿り", kana:"せんかのしめり", mora:7, roles:[1], tags:["社会"], mood:"quiet"},
+    {text:"遠い戦火の", kana:"とおいせんかの", mora:7, roles:[1], tags:["社会"], mood:"quiet"},
+    {text:"墓の水替え", kana:"はかのみずかえ", mora:7, roles:[1,4], tags:["死生","水"], mood:"quiet"},
+    {text:"線香の灰", kana:"せんこうのはい", mora:7, roles:[1,4], tags:["死生","祈り"], mood:"quiet"},
+    {text:"喪服の匂い", kana:"もふくのにおい", mora:7, roles:[1,4], tags:["死生","匂い"], mood:"quiet"},
+    {text:"祈りの余熱", kana:"いのりのよねつ", mora:7, roles:[4], tags:["祈り"], mood:"quiet"},
+    {text:"遺影の笑顔", kana:"いえいのえがお", mora:7, roles:[1,4], tags:["死生","記憶"], mood:"quiet"},
+    {text:"骨壺の白", kana:"こつつぼのしろ", mora:7, roles:[1,4], tags:["死生"], mood:"quiet"},
+    {text:"戒名の文字", kana:"かいみょうのもじ", mora:7, roles:[1,4], tags:["死生","言葉"], mood:"quiet"},
+    {text:"名前の灰へ", kana:"なまえのはいへ", mora:7, roles:[4], tags:["死生","言葉"], mood:"quiet"},
+    {text:"遺影の向こう", kana:"いえいのむこう", mora:7, roles:[1,4], tags:["死生","記憶"], mood:"quiet"},
+    {text:"猫の背中に", kana:"ねこのせなかに", mora:7, roles:[1,4], tags:["動物","生活"], mood:"soft"},
+    {text:"犬のあくびに", kana:"いぬのあくびに", mora:7, roles:[1,4], tags:["動物","生活"], mood:"soft"},
+    {text:"鳥影の午後", kana:"とりかげのごご", mora:7, roles:[1,4], tags:["自然","時間"], mood:"calm"},
+    {text:"虫の祈りへ", kana:"むしのいのりへ", mora:7, roles:[1,4], tags:["虫","祈り"], mood:"quiet"},
+    {text:"蟻の行列", kana:"ありのぎょうれつ", mora:7, roles:[1], tags:["虫","自然"], mood:"calm"},
+    {text:"魚の眠り", kana:"さかなのねむり", mora:7, roles:[1,4], tags:["自然","水"], mood:"quiet"},
+    {text:"金魚のまぶた", kana:"きんぎょのまぶた", mora:7, roles:[1,4], tags:["動物","水"], mood:"soft"},
+    {text:"鉢植えの夢", kana:"はちうえのゆめ", mora:7, roles:[1,4], tags:["植物","生活"], mood:"soft"},
+    {text:"朝顔の蔓", kana:"あさがおのつる", mora:7, roles:[1], tags:["植物","朝"], mood:"calm"},
+    {text:"枯葉の手紙", kana:"かれはのてがみ", mora:7, roles:[1,4], tags:["自然","記憶"], mood:"quiet"},
+    {text:"枯れ枝の影", kana:"かれえだのかげ", mora:7, roles:[1], tags:["自然"], mood:"quiet"},
+    {text:"雨粒の列", kana:"あまつぶのれつ", mora:7, roles:[1], tags:["雨","自然"], mood:"calm"},
+    {text:"水たまりの目", kana:"みずたまりのめ", mora:7, roles:[1,4], tags:["水","比喩"], mood:"soft"},
+    {text:"雲の寝癖に", kana:"くものねぐせに", mora:7, roles:[1,4], tags:["自然","軽み"], mood:"soft"},
+    {text:"風の言い訳", kana:"かぜのいいわけ", mora:7, roles:[1,4], tags:["自然","軽み"], mood:"soft"},
+    {text:"月の沈黙", kana:"つきのちんもく", mora:7, roles:[1,4], tags:["自然","夜"], mood:"quiet"},
+    {text:"星の沈黙", kana:"ほしのちんもく", mora:7, roles:[1,4], tags:["自然","夜"], mood:"quiet"},
+    {text:"夜明けの汽水", kana:"よあけのきすい", mora:7, roles:[1,4], tags:["自然","朝"], mood:"quiet"},
+    {text:"夕焼けの骨", kana:"ゆうやけのほね", mora:7, roles:[1,4], tags:["自然","比喩"], mood:"quiet"},
+    {text:"手紙の匂い", kana:"てがみのにおい", mora:7, roles:[1,4], tags:["生活","匂い"], mood:"quiet"},
+    {text:"写真の重み", kana:"しゃしんのおもみ", mora:7, roles:[1,4], tags:["生活","記憶"], mood:"wistful"},
+    {text:"名前の響き", kana:"なまえのひびき", mora:7, roles:[3,4], tags:["言葉","名前"], mood:"quiet"},
+    {text:"畳の匂い", kana:"たたみのにおい", mora:7, roles:[1], tags:["生活","家"], mood:"calm"},
+    {text:"布団の重み", kana:"ふとんのおもみ", mora:7, roles:[1,4], tags:["生活","身体"], mood:"quiet"},
+    {text:"財布の薄さ", kana:"さいふのうすさ", mora:7, roles:[4], tags:["生活","買い物"], mood:"soft"},
+    {text:"玄関の鍵", kana:"げんかんのかぎ", mora:7, roles:[1], tags:["生活","場所"], mood:"quiet"},
+    {text:"洗濯の夜", kana:"せんたくのよる", mora:7, roles:[1,4], tags:["生活","夜"], mood:"quiet"},
+    {text:"新聞の朝", kana:"しんぶんのあさ", mora:7, roles:[1], tags:["生活","朝"], mood:"calm"},
+    {text:"夕飯の湯気", kana:"ゆうはんのゆげ", mora:7, roles:[1], tags:["生活","食"], mood:"soft"},
+    {text:"茶碗の底へ", kana:"ちゃわんのそこへ", mora:7, roles:[1], tags:["生活","物"], mood:"quiet"},
+    {text:"包丁の冷え", kana:"ほうちょうのひえ", mora:7, roles:[1], tags:["生活","物"], mood:"quiet"},
+    {text:"食卓の端", kana:"しょくたくのはし", mora:7, roles:[1], tags:["生活","食"], mood:"quiet"},
+    {text:"洗面の水", kana:"せんめんのみず", mora:7, roles:[1], tags:["生活","水"], mood:"calm"},
+    {text:"毛布の重み", kana:"もうふのおもみ", mora:7, roles:[1,4], tags:["生活","身体"], mood:"quiet"},
+    {text:"靴箱の雨", kana:"くつばこのあめ", mora:7, roles:[1], tags:["生活","雨"], mood:"quiet"},
+    {text:"郵便の音", kana:"ゆうびんのおと", mora:7, roles:[1], tags:["生活","音"], mood:"calm"},
+    {text:"空き瓶の青", kana:"あきびんのあお", mora:7, roles:[1,4], tags:["生活","色"], mood:"calm"},
+    {text:"駅前の風", kana:"えきまえのかぜ", mora:7, roles:[1], tags:["都市","風"], mood:"calm"},
+    {text:"改札の熱", kana:"かいさつのねつ", mora:7, roles:[1], tags:["都市","移動"], mood:"quiet"},
+    {text:"終電の窓", kana:"しゅうでんのまど", mora:7, roles:[1], tags:["都市","夜"], mood:"quiet"},
+    {text:"始発の眠り", kana:"しはつのねむり", mora:7, roles:[1,4], tags:["都市","朝"], mood:"quiet"},
+    {text:"踏切の雨", kana:"ふみきりのあめ", mora:7, roles:[1], tags:["都市","雨"], mood:"quiet"},
+    {text:"信号の青", kana:"しんごうのあお", mora:7, roles:[1], tags:["都市","色"], mood:"calm"},
+    {text:"路地裏の猫", kana:"ろじうらのねこ", mora:7, roles:[1,4], tags:["都市","動物"], mood:"soft"},
+    {text:"自販機の夜", kana:"じはんきのよる", mora:7, roles:[1], tags:["都市","夜"], mood:"quiet"},
+    {text:"ビニールの雨", kana:"びにーるのあめ", mora:7, roles:[1], tags:["都市","雨"], mood:"quiet"},
+    {text:"通知の光", kana:"つうちのひかり", mora:7, roles:[3,4], tags:["現代","光"], mood:"quiet"},
+    {text:"画面の指紋", kana:"がめんのしもん", mora:7, roles:[3,4], tags:["現代","身体"], mood:"quiet"},
+    {text:"検索の跡", kana:"けんさくのあと", mora:7, roles:[3,4], tags:["現代","記憶"], mood:"quiet"},
+    {text:"イヤホンの夜", kana:"いやほんのよる", mora:7, roles:[1,4], tags:["現代","音"], mood:"quiet"},
+    {text:"圏外の空", kana:"けんがいのそら", mora:7, roles:[1,4], tags:["現代","空"], mood:"quiet"},
+    {text:"病院の窓", kana:"びょういんのまど", mora:7, roles:[1], tags:["病院","場所"], mood:"quiet"},
+    {text:"点滴の音", kana:"てんてきのおと", mora:7, roles:[1], tags:["病院","音"], mood:"quiet"},
+    {text:"白髪の光", kana:"しらがのひかり", mora:7, roles:[1,4], tags:["老い","身体"], mood:"quiet"},
+    {text:"父の爪切り", kana:"ちちのつめきり", mora:7, roles:[1,4], tags:["家族","老い"], mood:"quiet"},
+    {text:"母の買い物", kana:"ははのかいもの", mora:7, roles:[1,4], tags:["家族","老い"], mood:"calm"},
+    {text:"何でもないよ", kana:"なんでもないよ", mora:7, roles:[3,4], tags:["会話","関係"], mood:"soft"},
+    {text:"泣いてないから", kana:"ないてないから", mora:7, roles:[3,4], tags:["会話","関係"], mood:"wistful"},
+    {text:"先に寝ていい", kana:"さきにねていい", mora:7, roles:[3,4], tags:["会話","関係"], mood:"soft"},
+    {text:"手の熱残る", kana:"てのねつのこる", mora:7, roles:[3,4], tags:["子ども","親"], mood:"soft"},
+    {text:"声変わり前", kana:"こえがわりまえ", mora:7, roles:[3,4], tags:["若さ","声"], mood:"wistful"},
+    {text:"放課後の汗", kana:"ほうかごのあせ", mora:7, roles:[1,3], tags:["若さ","身体"], mood:"active"},
+    {text:"制服の風", kana:"せいふくのかぜ", mora:7, roles:[1], tags:["若さ","服"], mood:"active"},
+    {text:"自転車の空", kana:"じてんしゃのそら", mora:7, roles:[1], tags:["若さ","移動"], mood:"active"},
+    {text:"月の眠りへ", kana:"つきのねむりへ", mora:7, roles:[1,4], tags:["自然","夜"], mood:"quiet"},
+    {text:"星のまばたき", kana:"ほしのまばたき", mora:7, roles:[1,4], tags:["自然","夜"], mood:"soft"},
+    {text:"春泥の靴", kana:"しゅんでいのくつ", mora:7, roles:[1,4], tags:["自然","春"], mood:"calm"},
+    {text:"夏草の熱", kana:"なつくさのねつ", mora:7, roles:[1,4], tags:["自然","夏"], mood:"active"},
+    {text:"秋風の皿", kana:"あきかぜのさら", mora:7, roles:[1,4], tags:["自然","秋"], mood:"quiet"},
+    {text:"冬雲の底", kana:"ふゆぐものそこ", mora:7, roles:[1,4], tags:["自然","冬"], mood:"quiet"},
+    {text:"空の歯並び", kana:"そらのはならび", mora:7, roles:[1,4], tags:["エキセントリック","空"], mood:"quiet"},
+    {text:"夢の関節", kana:"ゆめのかんせつ", mora:7, roles:[1,4], tags:["エキセントリック","夢"], mood:"quiet"},
+    {text:"雨の歯車", kana:"あめのはぐるま", mora:7, roles:[1,4], tags:["エキセントリック","雨"], mood:"quiet"},
+    {text:"沈む食卓", kana:"しずむしょくたく", mora:7, roles:[1,4], tags:["エキセントリック","生活"], mood:"quiet"},
+    {text:"記憶の虫歯", kana:"きおくのむしば", mora:7, roles:[4], tags:["比喩","記憶"], mood:"quiet"},
+    {text:"優しさの棘", kana:"やさしさのとげ", mora:7, roles:[4], tags:["比喩","関係"], mood:"quiet"},
+    {text:"夜の鍵", kana:"よるのかぎ", mora:5, roles:[0,2], tags:["生活","夜"], mood:"quiet"},
+    {text:"鍋の湯気", kana:"なべのゆげ", mora:5, roles:[0,2], tags:["生活","食"], mood:"calm"},
+    {text:"白い息", kana:"しろいいき", mora:5, roles:[0,2], tags:["身体","冬"], mood:"quiet"},
+    {text:"指の熱", kana:"ゆびのねつ", mora:5, roles:[2,4], tags:["身体","感覚"], mood:"wistful"},
+    {text:"耳の奥", kana:"みみのおく", mora:5, roles:[2,4], tags:["身体"], mood:"quiet"},
+    {text:"胸の雨", kana:"むねのあめ", mora:5, roles:[2,4], tags:["身体","雨"], mood:"wistful"},
+    {text:"声の跡", kana:"こえのあと", mora:5, roles:[2,4], tags:["声","記憶"], mood:"wistful"},
+    {text:"嘘の跡", kana:"うそのあと", mora:5, roles:[2,4], tags:["嘘","記憶"], mood:"wistful"},
+    {text:"君の跡", kana:"きみのあと", mora:5, roles:[2,4], tags:["恋","記憶"], mood:"wistful"},
+    {text:"恋の熱", kana:"こいのねつ", mora:5, roles:[2,4], tags:["恋","身体"], mood:"wistful"},
+    {text:"好きの傷", kana:"すきのきず", mora:5, roles:[2,4], tags:["恋","心情"], mood:"wistful"},
+    {text:"返事待ち", kana:"へんじまち", mora:5, roles:[2,4], tags:["関係","会話"], mood:"wistful"},
+    {text:"遠い声", kana:"とおいこえ", mora:5, roles:[2,4], tags:["関係","声"], mood:"wistful"},
+    {text:"近い嘘", kana:"ちかいうそ", mora:5, roles:[2,4], tags:["関係","嘘"], mood:"quiet"},
+    {text:"泥の手に", kana:"どろのてに", mora:5, roles:[0,2], tags:["子ども","遊び"], mood:"active"},
+    {text:"石の声", kana:"いしのこえ", mora:5, roles:[0,2], tags:["子ども","不思議"], mood:"soft"},
+    {text:"虫の箱", kana:"むしのはこ", mora:5, roles:[0,2], tags:["子ども","虫"], mood:"soft"},
+    {text:"雲を追う", kana:"くもをおう", mora:5, roles:[0,2], tags:["子ども","空"], mood:"soft"},
+    {text:"若い膝", kana:"わかいひざ", mora:5, roles:[0,2], tags:["若さ","身体"], mood:"active"},
+    {text:"汗の朝", kana:"あせのあさ", mora:5, roles:[0,2], tags:["若さ","朝"], mood:"active"},
+    {text:"走る影", kana:"はしるかげ", mora:5, roles:[0,2], tags:["若さ","動作"], mood:"active"},
+    {text:"父の靴", kana:"ちちのくつ", mora:5, roles:[0,2], tags:["家族","記憶"], mood:"quiet"},
+    {text:"母の針", kana:"ははのはり", mora:5, roles:[0,2], tags:["家族","生活"], mood:"quiet"},
+    {text:"祖母の声", kana:"そぼのこえ", mora:5, roles:[0,2], tags:["家族","老い"], mood:"quiet"},
+    {text:"墓の花", kana:"はかのはな", mora:5, roles:[0,2], tags:["死生","自然"], mood:"quiet"},
+    {text:"線香の", kana:"せんこうの", mora:5, roles:[0], tags:["死生","祈り"], mood:"quiet"},
+    {text:"犬の鼻", kana:"いぬのはな", mora:5, roles:[0,2], tags:["動物","軽み"], mood:"soft"},
+    {text:"鳥の声", kana:"とりのこえ", mora:5, roles:[0,2], tags:["自然","音"], mood:"calm"},
+    {text:"雨の窓", kana:"あめのまど", mora:5, roles:[0,2], tags:["雨","生活"], mood:"quiet"},
+    {text:"月の皿", kana:"つきのさら", mora:5, roles:[0,2], tags:["比喩","夜"], mood:"soft"},
+    {text:"星の針", kana:"ほしのはり", mora:5, roles:[0,2], tags:["比喩","夜"], mood:"quiet"},
+    {text:"風の骨", kana:"かぜのほね", mora:5, roles:[0,2], tags:["比喩","自然"], mood:"quiet"},
+    {text:"空の癖", kana:"そらのくせ", mora:5, roles:[0,2], tags:["比喩","空"], mood:"soft"},
+    {text:"朝の靴ひも", kana:"あさのくつひも", mora:7, roles:[1], tags:["生活","朝"], mood:"calm"},
+    {text:"夜の鍵穴", kana:"よるのかぎあな", mora:7, roles:[1,4], tags:["生活","夜"], mood:"quiet"},
+    {text:"鍋の湯気越し", kana:"なべのゆげごし", mora:7, roles:[1], tags:["生活","食"], mood:"calm"},
+    {text:"指の熱だけ", kana:"ゆびのねつだけ", mora:7, roles:[3,4], tags:["身体","感覚"], mood:"wistful"},
+    {text:"耳奥の波", kana:"みみおくのなみ", mora:7, roles:[3,4], tags:["身体","比喩"], mood:"quiet"},
+    {text:"胸の雨音", kana:"むねのあまおと", mora:7, roles:[3,4], tags:["身体","雨"], mood:"wistful"},
+    {text:"声の跡形", kana:"こえのあとかた", mora:7, roles:[3,4], tags:["声","記憶"], mood:"wistful"},
+    {text:"嘘の跡形", kana:"うそのあとかた", mora:7, roles:[3,4], tags:["嘘","記憶"], mood:"wistful"},
+    {text:"君のいた午後", kana:"きみのいたごご", mora:7, roles:[3,4], tags:["恋","記憶"], mood:"wistful"},
+    {text:"好きの傷口", kana:"すきのきずぐち", mora:7, roles:[3,4], tags:["恋","心情"], mood:"wistful"},
+    {text:"未読の夜更け", kana:"みどくのよふけ", mora:7, roles:[3,4], tags:["恋","現代"], mood:"wistful"},
+    {text:"泥の手のひら", kana:"どろのてのひら", mora:7, roles:[1,3], tags:["子ども","遊び"], mood:"active"},
+    {text:"雲を追う午後", kana:"くもをおうごご", mora:7, roles:[1,4], tags:["子ども","空"], mood:"soft"},
+    {text:"汗の朝焼け", kana:"あせのあさやけ", mora:7, roles:[1,3], tags:["若さ","朝"], mood:"active"},
+    {text:"父の靴音", kana:"ちちのくつおと", mora:7, roles:[1,4], tags:["家族","記憶"], mood:"quiet"},
+    {text:"墓の花冷え", kana:"はかのはなびえ", mora:7, roles:[1,4], tags:["死生","自然"], mood:"quiet"},
+    {text:"犬の鼻先", kana:"いぬのはなさき", mora:7, roles:[1,4], tags:["動物","軽み"], mood:"soft"},
+    {text:"雨の窓際", kana:"あめのまどぎわ", mora:7, roles:[1,4], tags:["雨","生活"], mood:"quiet"},
+    {text:"布団から雨", kana:"ふとんからあめ", mora:7, roles:[1,4], tags:["生活","雨"], mood:"quiet"},
+    {text:"毛布の海へ", kana:"もうふのうみへ", mora:7, roles:[1,4], tags:["生活","比喩"], mood:"soft"},
+    {text:"終電の息", kana:"しゅうでんのいき", mora:7, roles:[1,4], tags:["都市","夜"], mood:"quiet"},
+    {text:"始発の白さ", kana:"しはつのしろさ", mora:7, roles:[1,4], tags:["都市","朝"], mood:"quiet"},
+    {text:"路地裏の雨", kana:"ろじうらのあめ", mora:7, roles:[1,4], tags:["都市","雨"], mood:"quiet"},
+    {text:"通知の余熱", kana:"つうちのよねつ", mora:7, roles:[3,4], tags:["現代","関係"], mood:"quiet"},
+    {text:"画面の夜明け", kana:"がめんのよあけ", mora:7, roles:[3,4], tags:["現代","朝"], mood:"quiet"},
+    {text:"熱の水", kana:"ねつのみず", mora:5, roles:[2,4], tags:["身体","水"], mood:"quiet"},
+    {text:"冬の鳥", kana:"ふゆのとり", mora:5, roles:[0,2], tags:["自然","冬"], mood:"calm"},
+    {text:"夏の靴", kana:"なつのくつ", mora:5, roles:[0,2], tags:["若さ","夏"], mood:"active"},
+    {text:"秋の皿", kana:"あきのさら", mora:5, roles:[0,2], tags:["生活","秋"], mood:"quiet"},
+    {text:"熱の水音", kana:"ねつのみずおと", mora:7, roles:[3,4], tags:["身体","水"], mood:"quiet"},
+    {text:"冬の鳥影", kana:"ふゆのとりかげ", mora:7, roles:[1,4], tags:["自然","冬"], mood:"calm"},
+    {text:"夏の靴音", kana:"なつのくつおと", mora:7, roles:[1,4], tags:["若さ","夏"], mood:"active"},
+    {text:"春の泥道", kana:"はるのどろみち", mora:7, roles:[1,4], tags:["自然","春"], mood:"calm"},
+    {text:"朝の郵便", kana:"あさのゆうびん", mora:7, roles:[1], tags:["生活","朝"], mood:"calm"},
+    {text:"昼の階段", kana:"ひるのかいだん", mora:7, roles:[1], tags:["生活","場所"], mood:"calm"},
+    {text:"午後の水筒", kana:"ごごのすいとう", mora:7, roles:[1], tags:["生活","物"], mood:"calm"},
+    {text:"夕べの薬", kana:"ゆうべのくすり", mora:7, roles:[1,4], tags:["生活","薬"], mood:"quiet"},
+    {text:"指先の雨", kana:"ゆびさきのあめ", mora:7, roles:[3,4], tags:["身体","雨"], mood:"wistful"},
+    {text:"爪先の砂", kana:"つまさきのすな", mora:7, roles:[1,3], tags:["身体","砂"], mood:"calm"},
+    {text:"胸元の風", kana:"むなもとのかぜ", mora:7, roles:[3,4], tags:["身体","風"], mood:"wistful"},
+    {text:"耳元の声", kana:"みみもとのこえ", mora:7, roles:[3,4], tags:["身体","声"], mood:"wistful"},
+    {text:"君宛ての雨", kana:"きみあてのあめ", mora:7, roles:[3,4], tags:["恋","雨"], mood:"wistful"},
+    {text:"君宛ての夜", kana:"きみあてのよる", mora:7, roles:[3,4], tags:["恋","夜"], mood:"wistful"},
+    {text:"恋文の端", kana:"こいぶみのはし", mora:7, roles:[3,4], tags:["恋","言葉"], mood:"wistful"},
+    {text:"手紙の余熱", kana:"てがみのよねつ", mora:7, roles:[3,4], tags:["関係","言葉"], mood:"wistful"},
+    {text:"返事の白さ", kana:"へんじのしろさ", mora:7, roles:[3,4], tags:["関係","会話"], mood:"quiet"},
+    {text:"名前のにじみ", kana:"なまえのにじみ", mora:7, roles:[3,4], tags:["名前","記憶"], mood:"wistful"},
+    {text:"泥団子の手", kana:"どろだんごのて", mora:7, roles:[1,3], tags:["子ども","遊び"], mood:"soft"},
+    {text:"虫取りの朝", kana:"むしとりのあさ", mora:7, roles:[1], tags:["子ども","虫"], mood:"active"},
+    {text:"泣き声の庭", kana:"なきごえのにわ", mora:7, roles:[1,4], tags:["子ども","親"], mood:"soft"},
+    {text:"寝息の隣", kana:"ねいきのとなり", mora:7, roles:[3,4], tags:["子ども","親"], mood:"soft"},
+    {text:"父宛ての文字", kana:"ちちあてのもじ", mora:7, roles:[1,4], tags:["家族","言葉"], mood:"quiet"},
+    {text:"母宛ての箱", kana:"ははあてのはこ", mora:7, roles:[1,4], tags:["家族","生活"], mood:"quiet"},
+    {text:"祖母宛ての花", kana:"そぼあてのはな", mora:7, roles:[1,4], tags:["家族","老い"], mood:"quiet"},
+    {text:"線香の昼", kana:"せんこうのひる", mora:7, roles:[1,4], tags:["死生","祈り"], mood:"quiet"},
+    {text:"鳥籠の朝", kana:"とりかごのあさ", mora:7, roles:[1,4], tags:["動物","朝"], mood:"quiet"}
+  ];
+
+  function ensureAudio(){
+    if(!soundOn) return null;
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playTone(type){
+    const ctx = ensureAudio();
+    if(!ctx) return;
+    const now = ctx.currentTime;
+
+    const master = ctx.createGain();
+    master.connect(ctx.destination);
+    master.gain.setValueAtTime(0.0001, now);
+
+    function droplet(startTime, freq, dur, gainValue){
+      const g = ctx.createGain();
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.setValueAtTime(freq, startTime);
+      o.frequency.exponentialRampToValueAtTime(freq * 1.55, startTime + dur * .55);
+      o.frequency.exponentialRampToValueAtTime(freq * .72, startTime + dur);
+      g.gain.setValueAtTime(0.0001, startTime);
+      g.gain.exponentialRampToValueAtTime(gainValue, startTime + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+      o.connect(g);
+      g.connect(master);
+      o.start(startTime);
+      o.stop(startTime + dur + .02);
+    }
+
+    function filteredNoise(startTime, dur, gainValue, frequency){
+      const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * dur));
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i=0;i<bufferSize;i++){
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.7);
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(frequency, startTime);
+      filter.Q.setValueAtTime(3.5, startTime);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, startTime);
+      g.gain.exponentialRampToValueAtTime(gainValue, startTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+      src.connect(filter);
+      filter.connect(g);
+      g.connect(master);
+      src.start(startTime);
+      src.stop(startTime + dur + .02);
+    }
+
+    if(type === "catch"){
+      master.gain.exponentialRampToValueAtTime(0.55, now + 0.015);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+      filteredNoise(now, .11, .035, 950);
+      droplet(now + .015, 520, .18, .055);
+      droplet(now + .085, 760, .22, .038);
+    }
+
+    if(type === "flee"){
+      master.gain.exponentialRampToValueAtTime(0.46, now + 0.01);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+      filteredNoise(now, .18, .045, 520);
+      filteredNoise(now + .035, .14, .035, 1200);
+      droplet(now + .025, 220, .16, .035);
+      droplet(now + .105, 360, .12, .025);
+    }
+
+    if(type === "complete"){
+      master.gain.exponentialRampToValueAtTime(0.46, now + 0.025);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.05);
+      filteredNoise(now, .28, .025, 700);
+      droplet(now + .05, 392, .34, .04);
+      droplet(now + .18, 494, .38, .035);
+      droplet(now + .33, 659, .46, .03);
+      droplet(now + .52, 784, .38, .022);
+    }
+  }
+
+  function splitText(text){
+    return Array.from(text);
+  }
+
+  function makeSlots(){
+    slotsEl.innerHTML = "";
+    pattern.forEach((m, i) => {
+      const slot = document.createElement("div");
+      slot.className = "slot";
+      slot.dataset.index = i;
+      slot.innerHTML = `<div class="slot-label">${i+1}句 ${patternLabel[i]}</div><div class="slot-text"><span class="slot-hint">ここに言葉が入る</span></div>`;
+      slotsEl.appendChild(slot);
+    });
+    updateSlots();
+  }
+
+  function updateSlots(){
+    const slots = [...document.querySelectorAll(".slot")];
+    slots.forEach((slot, i) => {
+      slot.classList.toggle("active", i === currentIndex && currentIndex < 5);
+      slot.classList.toggle("filled", !!poem[i]);
+      const text = slot.querySelector(".slot-text");
+      text.innerHTML = poem[i] ? poem[i] : `<span class="slot-hint">${patternLabel[i]}を待っています</span>`;
+    });
+    progressEl.innerHTML = pattern.map((m, i) => {
+      const cls = i < currentIndex ? "dot done" : (i === currentIndex ? "dot active" : "dot");
+      return `<div class="${cls}" title="${i+1}句 ${patternLabel[i]}"></div>`;
+    }).join("");
+
+    if(currentIndex < 5){
+      currentGuide.innerHTML = `次は <strong>${patternLabel[currentIndex]}</strong> の言葉をすくう`;
+      pondHud.innerHTML = `いま <strong>${patternLabel[currentIndex]}</strong>`;
+    }else{
+      currentGuide.innerHTML = `短歌が完成しました`;
+      pondHud.innerHTML = `一首 <strong>完成</strong>`;
+    }
+    creatures.forEach(c => applyValidity(c));
+  }
+
+  function showToast(message){
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 1400);
+  }
+
+  function pondRect(){
+    return pond.getBoundingClientRect();
+  }
+
+  function chooseWord(){
+    const needed = pattern[currentIndex] || (Math.random() < .5 ? 5 : 7);
+    let pool = words.slice();
+
+    if(currentIndex < 5){
+      const rolePool = words.filter(w => w.mora === needed && w.roles.includes(currentIndex));
+      const sameMora = words.filter(w => w.mora === needed);
+      const other = words.filter(w => w.mora !== needed);
+      const r = Math.random();
+      if(r < .45 && rolePool.length) pool = rolePool;
+      else if(r < .91 && sameMora.length) pool = sameMora;
+      else pool = other;
+    }
+
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function motionFor(word){
+    const group = primaryGroup(word);
+    if(group === "weird"){
+      const list = ["ink","snake","ribbon"];
+      return list[Math.floor(Math.random()*list.length)];
+    }
+    if(group === "urban"){
+      const list = word.mora === 5 ? ["smallFish","fish","ribbon"] : ["ribbon","fish","bigFish"];
+      return list[Math.floor(Math.random()*list.length)];
+    }
+    if(group === "body"){
+      const list = ["ink","ribbon","fish"];
+      return list[Math.floor(Math.random()*list.length)];
+    }
+    if(word.mora === 5){
+      const list = ["smallFish","fish","ink","ribbon"];
+      return list[Math.floor(Math.random()*list.length)];
+    }
+    const list = ["ribbon","bigFish","snake","ink"];
+    return list[Math.floor(Math.random()*list.length)];
+  }
+
+
+  function primaryGroup(word){
+    const tags = word.tags || [];
+    if(tags.some(t => ["学校","細部"].includes(t))) return "school";
+    if(tags.some(t => ["都市","現代","街","駅"].includes(t))) return "urban";
+    if(tags.some(t => ["身体","心情"].includes(t))) return "body";
+    if(tags.some(t => ["生活","物","家"].includes(t))) return "daily";
+    if(tags.some(t => ["違和感","比喩"].includes(t))) return "weird";
+    if(tags.some(t => ["記憶","家族","時間"].includes(t))) return "memory";
+    return "water";
+  }
+
+  function makeWake(clientX, clientY){
+    const w = document.createElement("div");
+    w.className = "wake";
+    w.style.left = `${clientX}px`;
+    w.style.top = `${clientY}px`;
+    document.body.appendChild(w);
+    setTimeout(() => w.remove(), 1200);
+  }
+
+  class Creature{
+    constructor(word, startY = null){
+      this.word = word;
+      this.text = word.text;
+      this.chars = splitText(word.text);
+      this.mora = word.mora;
+      this.motion = motionFor(word);
+      this.group = primaryGroup(word);
+      this.el = document.createElement("div");
+      this.el.className = "creature";
+      this.charEls = [];
+      this.history = [];
+      this.state = "normal";
+      this.birth = performance.now();
+      this.phase = Math.random() * Math.PI * 2;
+      this.depth = 0.78 + Math.random() * 0.44;
+      this.nearPower = 0;
+      this.driftSeed = Math.random() * 1000;
+      this.turnSeed = Math.random() * Math.PI * 2;
+      this.tailFlex = 0.75 + Math.random() * 0.55;
+      this.wakePhase = Math.random() * Math.PI * 2;
+
+      const rect = pondRect();
+      const groupLane = {
+        school: 0.28,
+        urban: 0.62,
+        body: 0.46,
+        daily: 0.38,
+        weird: 0.72,
+        memory: 0.54,
+        water: Math.random()
+      }[this.group];
+      const laneX = 40 + groupLane * Math.max(120, rect.width - 100);
+      this.x = laneX + (Math.random() - .5) * rect.width * .34;
+      this.x = Math.max(40, Math.min(rect.width - 70, this.x));
+      this.y = startY ?? (rect.height + 80 + Math.random() * rect.height * .7);
+      this.vx = (Math.random() - .5) * .22;
+      this.baseFall = (word.mora === 5 ? 0.126 + Math.random()*0.08 : 0.093 + Math.random()*0.06) * this.depth;
+      if(this.group === "body") this.baseFall *= 0.86;
+      if(this.group === "urban") this.baseFall *= 1.08;
+      if(this.group === "weird") this.baseFall *= 0.72;
+      if(this.group === "school") this.baseFall *= 0.96;
+      this.waveSpeed = 0.0013 + Math.random() * 0.0015;
+      this.waveAmp = (word.mora === 5 ? 13 + Math.random()*16 : 18 + Math.random()*24) * this.depth;
+      const len = this.chars.length;
+      this.spacingFrames = Math.round((word.mora === 5 ? 10 : 12) + Math.min(7, len * 0.55));
+      this.baseSize = (word.mora === 5 ? 22 + Math.random()*4 : 23 + Math.random()*5) * this.depth;
+      this.rotateAmp = this.motion === "snake" ? 6 : 3.6;
+      this.breathSpeed = 0.00075 + Math.random() * 0.00055;
+      this.fleeStart = 0;
+      this.fleeDuration = 1000;
+      this.fleeVX = 0;
+      this.fleeVY = 0;
+      this.caughtStart = 0;
+      this.startPositions = [];
+      this.targetPositions = [];
+      this.targetSlot = null;
+
+      this.chars.forEach((ch, i) => {
+        const span = document.createElement("span");
+        span.className = ch === "ー" ? "char long-vowel" : "char";
+        span.textContent = ch;
+        span.dataset.index = i;
+        span.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          this.handleTap(e);
+        });
+        this.el.appendChild(span);
+        this.charEls.push(span);
+      });
+
+      pond.appendChild(this.el);
+      for(let i=0;i<120;i++) this.history.push({x:this.x, y:this.y + i * 4});
+      applyValidity(this);
+    }
+
+    handleTap(e){
+      if(this.state !== "normal") return;
+      if(currentIndex >= 5) return;
+
+      if(this.mora === pattern[currentIndex]){
+        catchCreature(this);
+      }else{
+        fleeCreature(this, e.clientX, e.clientY);
+      }
+    }
+
+    update(now, dt){
+      if(this.state === "normal") this.updateNormal(now, dt);
+      else if(this.state === "fleeing") this.updateFlee(now, dt);
+      else if(this.state === "caught") this.updateCaught(now, dt);
+    }
+
+    updateNormal(now, dt){
+      const t = now + this.phase * 1000;
+      const rect = pondRect();
+      let wave = Math.sin(t * this.waveSpeed) * this.waveAmp;
+
+      if(this.motion === "snake") wave += Math.sin(t * this.waveSpeed * 2.1 + this.phase) * this.waveAmp * .30;
+      if(this.motion === "ink") wave += Math.sin(t * this.waveSpeed * .42 + this.phase * 2) * this.waveAmp * .50;
+      if(this.motion === "smallFish") wave += Math.sin(t * this.waveSpeed * 3.0) * 3.2;
+
+      // 群れのゆるい中心。完全には寄せず、同じ質感の言葉が近い水域を泳ぐ程度にする。
+      const groupLane = {
+        school: 0.28,
+        urban: 0.62,
+        body: 0.46,
+        daily: 0.38,
+        weird: 0.72,
+        memory: 0.54,
+        water: 0.50
+      }[this.group] ?? 0.5;
+      const laneX = 40 + groupLane * Math.max(120, rect.width - 100);
+      this.x += (laneX - this.x) * 0.00055 * dt;
+
+      // 指やカーソルに近いと少し身を整え、読めるように浮き上がる。
+      let nearTarget = 0;
+      if(pointer.active && now - pointer.last < 1600){
+        const pondR = pondRect();
+        const px = pointer.x - pondR.left;
+        const py = pointer.y - pondR.top;
+        const dx = (this.x + wave) - px;
+        const dy = this.y - py;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < 150){
+          nearTarget = 1 - dist / 150;
+          // 触れられそうになると、ほんの少しだけ指から離れて泳ぐ
+          this.x += (dx / Math.max(30, dist)) * nearTarget * 0.035 * dt;
+        }
+      }
+      this.nearPower += (nearTarget - this.nearPower) * Math.min(1, dt * 0.008);
+      this.el.classList.toggle("near", this.nearPower > .18);
+
+      const drift = Math.sin(t * 0.00055 + this.driftSeed) * 0.018 * dt;
+      this.x += this.vx * dt + Math.cos(t * this.waveSpeed + this.phase) * 0.023 * dt + drift;
+      const swimPulse = 0.72 + Math.sin(t * this.breathSpeed + this.phase) * 0.18 + Math.sin(t * this.breathSpeed * 2.3) * 0.06;
+      const nearSlow = 1 - this.nearPower * .18;
+      this.y -= this.baseFall * Math.max(0.45, swimPulse) * nearSlow * dt;
+
+      if(this.x < 24) { this.x = 24; this.vx = Math.abs(this.vx) + .04; }
+      if(this.x > rect.width - 56) { this.x = rect.width - 56; this.vx = -Math.abs(this.vx) - .04; }
+
+      const head = {x:this.x + wave * (1 - this.nearPower * .28), y:this.y};
+      this.pushHistory(head);
+      this.drawFromHistory(now, 0, 0);
+    }
+
+    updateFlee(now, dt){
+      const p = Math.min(1, (now - this.fleeStart) / this.fleeDuration);
+      const rect = pondRect();
+
+      if(p < .25){
+        this.pushHistory({x:this.x, y:this.y - this.baseFall * dt});
+      }else{
+        const q = (p - .25) / .75;
+        const ease = 1 - Math.pow(1-q, 3);
+        this.x += this.fleeVX * dt * (1 - ease * .45) + Math.sin(now * .018 + this.phase) * 0.035 * dt;
+        this.y -= Math.max(0.04, this.baseFall - this.fleeVY * 0.18) * dt;
+        if(this.x < 30){ this.x = 30; this.fleeVX = Math.abs(this.fleeVX); }
+        if(this.x > rect.width - 60){ this.x = rect.width - 60; this.fleeVX = -Math.abs(this.fleeVX); }
+        this.pushHistory({x:this.x, y:this.y});
+      }
+
+      const shakeStrength = p < .25 ? 7 * (1 - p / .25) : 1.2 * (1 - p);
+      this.drawFromHistory(now, shakeStrength, p);
+
+      if(p >= 1){
+        this.state = "normal";
+        this.el.classList.remove("fleeing");
+        applyValidity(this);
+      }
+    }
+
+    updateCaught(now, dt){
+      const p = Math.min(1, (now - this.caughtStart) / 780);
+      const ease = p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p+2,3)/2;
+      const arc = Math.sin(p * Math.PI) * -42;
+
+      this.charEls.forEach((span, i) => {
+        const s = this.startPositions[i];
+        const target = this.targetPositions[i];
+        const x = s.x + (target.x - s.x) * ease;
+        const y = s.y + (target.y - s.y) * ease + arc;
+        const longRot = this.chars[i] === "ー" ? 90 : 0;
+        const rot = longRot + Math.sin((now * .006) + i) * (1-p) * 6;
+        const scale = 1.04 - p * .04;
+        span.style.fontSize = `${this.baseSize + 2}px`;
+        span.style.opacity = `${Math.max(0, 1 - Math.max(0, p - .76) / .24)}`;
+        span.style.transform = `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${scale})`;
+      });
+
+      if(p >= 1){
+        this.remove();
+      }
+    }
+
+    pushHistory(pos){
+      this.history.unshift(pos);
+      const max = this.spacingFrames * (this.chars.length + 8);
+      if(this.history.length > max) this.history.length = max;
+    }
+
+    drawFromHistory(now, shake = 0, fleeP = 0){
+      this.charEls.forEach((span, i) => {
+        const compression = fleeP > 0 && fleeP < .28 ? 0.55 + fleeP * 1.6 : 1;
+        const histIndex = Math.min(this.history.length-1, Math.round(i * this.spacingFrames * compression));
+        const h = this.history[histIndex] || this.history[this.history.length-1] || {x:this.x,y:this.y};
+        const t = now * 0.003;
+        const readable = 1 - this.nearPower * .45;
+        const wobble = Math.sin(t * 1.35 + i * .72 + this.phase) * (this.motion === "ribbon" ? 3.4 : 1.8) * readable;
+        const breath = 1 + Math.sin(now * 0.0019 + i * .55 + this.phase) * (0.035 - this.nearPower * .014);
+        const longRot = this.chars[i] === "ー" ? 90 : 0;
+        const rot = longRot + Math.sin(now * 0.0018 + i * .72 + this.phase) * this.rotateAmp * readable;
+        const sx = shake ? Math.sin(now * .08 + i * 2.4) * shake : 0;
+        const sy = shake ? Math.cos(now * .075 + i * 1.8) * shake * .65 : 0;
+
+        const baseOpacity = .96;
+        const alphaWaver = this.motion === "ink" ? Math.sin(now * .0012 + i) * .07 : 0;
+        const opacity = Math.max(.58, Math.min(1, baseOpacity + alphaWaver + this.nearPower * .04 - fleeP * .08));
+
+        span.style.fontSize = `${this.baseSize * (1 + this.nearPower * .075)}px`;
+        span.style.opacity = `${opacity}`;
+        span.style.transform = `translate(${h.x + wobble + sx}px, ${h.y + sy}px) rotate(${rot}deg) scale(${breath})`;
+      });
+    }
+
+    getCurrentPositions(){
+      return this.charEls.map((span, i) => {
+        const h = this.history[Math.min(this.history.length-1, i * this.spacingFrames)] || {x:this.x,y:this.y};
+        return {x:h.x, y:h.y};
+      });
+    }
+
+    remove(){
+      this.dead = true;
+      this.el.remove();
+    }
+  }
+
+  function applyValidity(c){
+    c.el.classList.remove("valid","invalid");
+    if(currentIndex < 5 && c.mora === pattern[currentIndex]){
+      c.el.classList.add("valid");
+    }else{
+      c.el.classList.add("invalid");
+    }
+  }
+
+
+  function makeRipple(clientX, clientY){
+    const r = document.createElement("div");
+    r.className = "ripple";
+    r.style.left = `${clientX}px`;
+    r.style.top = `${clientY}px`;
+    document.body.appendChild(r);
+    setTimeout(() => r.remove(), 780);
+  }
+
+  function fleeCreature(c, clientX, clientY){
+    playTone("flee");
+    makeRipple(clientX, clientY);
+    const rect = pondRect();
+    const localX = clientX - rect.left;
+    const localY = clientY - rect.top;
+    const dx = c.x - localX;
+    const dir = dx >= 0 ? 1 : -1;
+
+    c.state = "fleeing";
+    c.fleeStart = performance.now();
+    c.fleeVX = dir * (0.42 + Math.random()*0.28);
+    c.fleeVY = 0.18 + Math.random()*0.18;
+    c.el.classList.remove("valid","invalid");
+    c.el.classList.add("fleeing");
+    showToast(`今は${patternLabel[currentIndex]}の言葉をすくいます`);
+  }
+
+  function catchCreature(c){
+    if(currentIndex >= 5) return;
+
+    playTone("catch");
+
+    const slotIndex = currentIndex;
+    const pondR = pondRect();
+    const startPositions = c.getCurrentPositions().map(pos => ({
+      x: pos.x + pondR.left,
+      y: pos.y + pondR.top
+    }));
+
+    const slot = document.querySelector(`.slot[data-index="${slotIndex}"]`);
+    const slotRect = slot.getBoundingClientRect();
+    const targetX = slotRect.left + 18;
+    const targetY = slotRect.top + slotRect.height/2 - 14;
+    const spacing = Math.min(28, Math.max(18, 190 / Math.max(1, c.chars.length)));
+    const targetPositions = c.chars.map((_, i) => ({
+      x: targetX + i * spacing,
+      y: targetY
+    }));
+
+    c.state = "caught";
+    c.caughtStart = performance.now();
+    c.startPositions = startPositions;
+    c.targetPositions = targetPositions;
+    c.targetSlot = slotIndex;
+    c.el.classList.remove("valid","invalid");
+    c.el.classList.add("caught","flying-layer");
+    document.body.appendChild(c.el);
+
+    poem[slotIndex] = c.text;
+    spawnCreature(c.mora, true);
+    currentIndex++;
+    spawnCreature(pattern[currentIndex] || null, true);
+    updateSlots();
+    ensureCreatures();
+
+    if(currentIndex >= 5){
+      playTone("complete");
+      showClean();
+    }
+  }
+
+  function finalizeCatch(c){
+    poem[c.targetSlot] = c.text;
+    c.remove();
+    creatures = creatures.filter(x => x !== c);
+    currentIndex++;
+    updateSlots();
+    ensureCreatures();
+    if(currentIndex >= 5){
+      playTone("complete");
+      showClean();
+    }
+  }
+
+  function showClean(){
+    // 右から左へ、1句・2句・3句・4句・5句の5列で表示する
+    const lines = poem.slice().reverse();
+    cleanPoem.innerHTML = lines.map((line) => `<span class="ku">${line}</span>`).join("");
+    setTimeout(() => clean.classList.add("show"), 350);
+  }
+
+  function spawnCreature(forceMora = null, immediate = false){
+    let w = chooseWord();
+    if(forceMora){
+      const pool = words.filter(x => x.mora === forceMora);
+      w = pool[Math.floor(Math.random()*pool.length)];
+    }
+    const rect = pondRect();
+    const startY = immediate ? (rect.height + 24 + Math.random() * 80) : null;
+    const c = new Creature(w, startY);
+    creatures.push(c);
+    return c;
+  }
+
+  function ensureCreatures(){
+    const rect = pondRect();
+    const desired = rect.width < 520 ? 12 : 18;
+    while(creatures.filter(c => c.state !== "caught" && !c.dead).length < desired){
+      spawnCreature();
+    }
+
+    if(currentIndex < 5){
+      const needed = pattern[currentIndex];
+      const countNeeded = creatures.filter(c => c.state === "normal" && c.mora === needed).length;
+      for(let i=countNeeded; i<4; i++) spawnCreature(needed);
+    }
+    creatures.forEach(applyValidity);
+  }
+
+  function resetAll(){
+    poem = ["","","","",""];
+    currentIndex = 0;
+    clean.classList.remove("show");
+    creatures.forEach(c => c.remove());
+    creatures = [];
+    makeSlots();
+    ensureCreatures();
+  }
+
+  function undo(){
+    if(currentIndex <= 0) return;
+    clean.classList.remove("show");
+    currentIndex--;
+    poem[currentIndex] = "";
+    updateSlots();
+    ensureCreatures();
+  }
+
+  function copyPoem(){
+    const text = poem.filter(Boolean).join("\n");
+    if(!text){
+      showToast("まだ短歌がありません");
+      return;
+    }
+    navigator.clipboard?.writeText(text).then(() => {
+      showToast("コピーしました");
+    }).catch(() => {
+      showToast("コピーできませんでした");
+    });
+  }
+
+
+  function updatePointerFromEvent(e){
+    pointer.x = e.clientX;
+    pointer.y = e.clientY;
+    pointer.active = true;
+    pointer.last = performance.now();
+  }
+
+  pond.addEventListener("pointermove", (e) => {
+    updatePointerFromEvent(e);
+    const now = performance.now();
+    if(now - wakeTimer > 220){
+      wakeTimer = now;
+      makeWake(e.clientX, e.clientY);
+    }
+  });
+
+  pond.addEventListener("pointerdown", (e) => {
+    updatePointerFromEvent(e);
+    makeWake(e.clientX, e.clientY);
+  });
+
+  pond.addEventListener("pointerleave", () => {
+    pointer.active = false;
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", resetAll);
+  document.getElementById("undoBtn").addEventListener("click", undo);
+  document.getElementById("copyBtn").addEventListener("click", copyPoem);
+  document.getElementById("soundBtn").addEventListener("click", () => {
+    soundOn = !soundOn;
+    document.getElementById("soundBtn").textContent = soundOn ? "音：入" : "音：切";
+    if(soundOn) playTone("catch");
+  });
+  document.getElementById("newFromCleanBtn").addEventListener("click", resetAll);
+  document.getElementById("copyCleanBtn").addEventListener("click", copyPoem);
+
+  function tick(now){
+    const dt = Math.min(34, now - lastTime);
+    lastTime = now;
+    spawnTimer += dt;
+
+    creatures.forEach(c => c.update(now, dt));
+
+    const rect = pondRect();
+    creatures = creatures.filter(c => {
+      if(c.dead) return false;
+      if(c.state !== "caught" && c.y < -180){
+        c.remove();
+        return false;
+      }
+      return true;
+    });
+
+    if(spawnTimer > 450){
+      spawnTimer = 0;
+      ensureCreatures();
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  makeSlots();
+  ensureCreatures();
+  requestAnimationFrame(tick);
+
+  window.addEventListener("resize", () => {
+    // iPadのファイルプレビューでは、タップ後のバー表示などでresizeが発生することがある。
+    // ここで全削除すると、言葉の流れがリセットされたように見えるため、既存の言葉は残す。
+    const rect = pondRect();
+    creatures.forEach(c => {
+      if(c.state === "caught") return;
+      c.x = Math.max(24, Math.min(rect.width - 56, c.x));
+    });
+    ensureCreatures();
+  });
+})();
+</script>
+</body>
+</html>
