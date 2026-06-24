@@ -305,9 +305,9 @@ button:active{
   justify-content:center;
   min-width:1em;
   min-height:1em;
-  color:rgba(39,32,25,.72);
+  color:var(--word-color, rgba(39,32,25,.72));
   font-weight:600;
-  text-shadow:0 1px 1px rgba(255,255,255,.65);
+  text-shadow:0 1px 0 rgba(255,255,255,.35);
   cursor:pointer;
   pointer-events:auto;
   will-change:transform, opacity;
@@ -316,15 +316,15 @@ button:active{
   border-radius:50%;
 }
 .creature.valid .char{
-  color:rgba(32,25,18,.94);
-  text-shadow:0 0 8px rgba(181,138,72,.16), 0 1px 1px rgba(255,255,255,.8);
+  color:var(--word-color, rgba(32,25,18,.94));
+  text-shadow:0 0 5px var(--word-glow, rgba(181,138,72,.12)), 0 1px 0 rgba(255,255,255,.55);
 }
 .creature.invalid .char{
-  color:rgba(32,25,18,.94);
-  text-shadow:0 0 8px rgba(181,138,72,.12), 0 1px 1px rgba(255,255,255,.8);
+  color:var(--word-color, rgba(32,25,18,.94));
+  text-shadow:0 0 4px var(--word-glow, rgba(181,138,72,.10)), 0 1px 0 rgba(255,255,255,.50);
 }
 .creature.fleeing .char{
-  color:rgba(90,58,40,.82);
+  color:var(--word-color, rgba(90,58,40,.82));
 }
 .creature.caught .char{
   color:rgba(139,76,47,.96);
@@ -542,6 +542,19 @@ button:active{
   let soundOn = true;
   let pointer = {x:0, y:0, active:false, last:0};
   let wakeTimer = 0;
+
+  const wordColors = [
+    {ink:"rgba(42,34,28,.92)", glow:"rgba(181,138,72,.14)"},  // 墨茶
+    {ink:"rgba(54,72,105,.90)", glow:"rgba(86,124,176,.16)"},  // 藍
+    {ink:"rgba(58,96,78,.90)", glow:"rgba(92,145,113,.15)"},   // 深緑
+    {ink:"rgba(113,76,58,.90)", glow:"rgba(172,113,82,.15)"},  // 赤茶
+    {ink:"rgba(103,72,112,.88)", glow:"rgba(150,103,166,.14)"}, // 藤
+    {ink:"rgba(122,92,42,.90)", glow:"rgba(181,138,72,.15)"},  // 金茶
+    {ink:"rgba(68,100,112,.88)", glow:"rgba(94,146,164,.14)"}, // 青鼠
+    {ink:"rgba(126,68,83,.88)", glow:"rgba(184,94,119,.13)"},  // 薔薇鼠
+    {ink:"rgba(74,78,57,.90)", glow:"rgba(124,134,88,.13)"},   // 苔
+    {ink:"rgba(92,71,54,.90)", glow:"rgba(146,109,78,.14)"}    // 胡桃
+  ];
 
   const words = [
     {text:"春の朝", kana:"はるのあさ", mora:5, roles:[0], tags:["春","朝","情景"], mood:"light"},
@@ -1686,17 +1699,16 @@ button:active{
   }
 
   function chooseWord(){
-    const needed = pattern[currentIndex] || (Math.random() < .5 ? 5 : 7);
-    let pool = words.slice();
+    // 水槽には常に五音と七音を混ぜる。
+    // 現在の句の音数で出現語を切り替えない。
+    const mora = Math.random() < .5 ? 5 : 7;
+    let pool = words.filter(w => w.mora === mora);
 
+    // ただし句位置に合う語は少しだけ出やすくする。
+    // 音数の混在は崩さない。
     if(currentIndex < 5){
-      const rolePool = words.filter(w => w.mora === needed && w.roles.includes(currentIndex));
-      const sameMora = words.filter(w => w.mora === needed);
-      const other = words.filter(w => w.mora !== needed);
-      const r = Math.random();
-      if(r < .45 && rolePool.length) pool = rolePool;
-      else if(r < .91 && sameMora.length) pool = sameMora;
-      else pool = other;
+      const rolePool = pool.filter(w => w.roles.includes(currentIndex));
+      if(rolePool.length && Math.random() < .35) pool = rolePool;
     }
 
     return pool[Math.floor(Math.random() * pool.length)];
@@ -1766,6 +1778,9 @@ button:active{
       this.turnSeed = Math.random() * Math.PI * 2;
       this.tailFlex = 0.75 + Math.random() * 0.55;
       this.wakePhase = Math.random() * Math.PI * 2;
+      this.color = wordColors[Math.floor(Math.random() * wordColors.length)];
+      this.el.style.setProperty("--word-color", this.color.ink);
+      this.el.style.setProperty("--word-glow", this.color.glow);
 
       const rect = pondRect();
       const groupLane = {
@@ -1789,6 +1804,10 @@ button:active{
       if(this.group === "school") this.baseFall *= 0.96;
       this.waveSpeed = 0.0013 + Math.random() * 0.0015;
       this.waveAmp = (word.mora === 5 ? 13 + Math.random()*16 : 18 + Math.random()*24) * this.depth;
+
+      // 履歴更新は毎フレームのまま、個体差だけを少し足す
+      this.swimTempo = 0.92 + Math.random() * 0.22;
+      this.swimWidth = 0.88 + Math.random() * 0.28;
       const len = this.chars.length;
       this.spacingFrames = Math.round((word.mora === 5 ? 10 : 12) + Math.min(7, len * 0.55));
       this.baseSize = (word.mora === 5 ? 22 + Math.random()*4 : 23 + Math.random()*5) * this.depth;
@@ -1841,7 +1860,7 @@ button:active{
     updateNormal(now, dt){
       const t = now + this.phase * 1000;
       const rect = pondRect();
-      let wave = Math.sin(t * this.waveSpeed) * this.waveAmp;
+      let wave = Math.sin(t * this.waveSpeed * this.swimTempo) * this.waveAmp * this.swimWidth;
 
       if(this.motion === "snake") wave += Math.sin(t * this.waveSpeed * 2.1 + this.phase) * this.waveAmp * .30;
       if(this.motion === "ink") wave += Math.sin(t * this.waveSpeed * .42 + this.phase * 2) * this.waveAmp * .50;
@@ -2053,9 +2072,13 @@ button:active{
     document.body.appendChild(c.el);
 
     poem[slotIndex] = c.text;
-    spawnCreature(c.mora, true);
     currentIndex++;
-    spawnCreature(pattern[currentIndex] || null, true);
+
+    // 選んだ後も、次の句の音数へ水槽を切り替えない。
+    // 減った分だけ五音・七音の混在を保って補充する。
+    spawnCreature(null, true);
+    spawnCreature(null, true);
+
     updateSlots();
     ensureCreatures();
 
@@ -2086,6 +2109,7 @@ button:active{
   }
 
   function spawnCreature(forceMora = null, immediate = false){
+    // forceMora は互換用に残すが、通常補充では使わない。
     let w = chooseWord();
     if(forceMora){
       const pool = words.filter(x => x.mora === forceMora);
@@ -2100,16 +2124,29 @@ button:active{
 
   function ensureCreatures(){
     const rect = pondRect();
-    const desired = rect.width < 520 ? 12 : 18;
-    while(creatures.filter(c => c.state !== "caught" && !c.dead).length < desired){
+    // 同時に出る言葉の数を約1.5倍にする
+    const desired = rect.width < 520 ? 18 : 27;
+    const minEach = rect.width < 520 ? 6 : 9;
+
+    const active = () => creatures.filter(c => c.state !== "caught" && !c.dead);
+    while(active().length < desired){
       spawnCreature();
     }
 
-    if(currentIndex < 5){
-      const needed = pattern[currentIndex];
-      const countNeeded = creatures.filter(c => c.state === "normal" && c.mora === needed).length;
-      for(let i=countNeeded; i<4; i++) spawnCreature(needed);
+    // 現在の句の音数に寄せず、五音・七音の混在を保つ。
+    // 片方が少なくなった時だけ補う。
+    let count5 = active().filter(c => c.mora === 5).length;
+    let count7 = active().filter(c => c.mora === 7).length;
+
+    while(count5 < minEach){
+      spawnCreature(5);
+      count5++;
     }
+    while(count7 < minEach){
+      spawnCreature(7);
+      count7++;
+    }
+
     creatures.forEach(applyValidity);
   }
 
